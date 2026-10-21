@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Code Drills · DSA in Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/store.js"></script>
+<script src="assets/js/core.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">Mixed practice</p>
+  <h1>Code drills</h1>
+  <p class="lede">Every fill-in-the-blank and idea-to-code drill from all patterns and data structures in one place. Mix patterns so you practice <b>recognizing</b> which template to reach for, not just typing it.</p>
+  <div class="stats" id="stats"></div>
+</header>
+<main class="single">
+  <div class="filters">
+    <label for="fp" class="note" style="margin:0">Topic</label>
+    <select id="fp"><option value="all">Everything</option></select>
+    <label for="ft" class="note" style="margin:0">Type</label>
+    <select id="ft"><option value="all">Both types</option><option value="fill">Fill in the blanks</option><option value="order">Idea to code</option></select>
+    <label class="note" style="margin:0;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="fu"> Only not passed yet</label>
+    <button class="btn sm" type="button" id="shuffle">Shuffle</button>
+  </div>
+  <p class="note" id="count"></p>
+  <div id="list"></div>
+</main>
+<footer>Progress is saved only in this browser.</footer>
+<script src="assets/js/drills.js"></script>
+<script>
+DSA.topbar('practice');
+DSA.boot('', DSA.dsFiles(''), function(){
+  var all = DSA.sorted(), drills = [];
+  // Patterns and data structures share one list. key = Store slug, href = page that owns the drill.
+  var sources = all.map(function(p){ return { key: p.slug, title: p.title, href: 'pattern.html?p=' + p.slug, drills: p.drills, grp: 'Patterns' }; })
+    .concat(DSA.sortedDS().map(function(d){ return { key: DSA.dsKey(d), title: d.title, href: 'structure.html?d=' + d.slug, drills: d.drills || {}, grp: 'Data structures' }; }));
+  var groups = {};
+  sources.forEach(function(p){
+    (p.drills.fillBlank || []).forEach(function(d){ drills.push({ p: p, d: d, kind: 'fill' }); });
+    (p.drills.order || []).forEach(function(d){ drills.push({ p: p, d: d, kind: 'order' }); });
+    if (!groups[p.grp]){ groups[p.grp] = document.createElement('optgroup'); groups[p.grp].label = p.grp; document.getElementById('fp').appendChild(groups[p.grp]); }
+    var o = document.createElement('option'); o.value = p.key; o.textContent = p.title;
+    groups[p.grp].appendChild(o);
+  });
+  var start = DSA.param('p') || (DSA.param('d') ? 'ds-' + DSA.param('d') : null);
+  if (start) document.getElementById('fp').value = start;
+  var order = drills.slice();
+  function stats(){
+    var passed = drills.filter(function(x){ return Store.drillDone(x.p.key, x.d.id); }).length;
+    document.getElementById('stats').innerHTML =
+      '<div class="stat"><b>' + passed + ' / ' + drills.length + '</b><span>drills passed</span></div>' +
+      '<div class="stat"><b>' + drills.filter(function(x){ return x.kind === 'fill'; }).length + '</b><span>fill in the blanks</span></div>' +
+      '<div class="stat"><b>' + drills.filter(function(x){ return x.kind === 'order'; }).length + '</b><span>idea to code</span></div>';
+  }
+  function draw(){
+    var fp = document.getElementById('fp').value, ft = document.getElementById('ft').value, fu = document.getElementById('fu').checked;
+    var list = order.filter(function(x){
+      return (fp === 'all' || x.p.key === fp) && (ft === 'all' || x.kind === ft) && (!fu || !Store.drillDone(x.p.key, x.d.id));
+    });
+    var host = document.getElementById('list');
+    host.innerHTML = '';
+    document.getElementById('count').textContent = list.length + ' drill' + (list.length === 1 ? '' : 's') + ' shown.';
+    list.forEach(function(x){
+      var lab = document.createElement('p');
+      lab.className = 'eyebrow';
+      lab.style.margin = '22px 0 6px';
+      lab.innerHTML = '<a href="' + x.p.href + '#drills">' + DSA.esc(x.p.title) + '</a>';
+      host.appendChild(lab);
+      var b = document.createElement('div');
+      host.appendChild(b);
+      if (x.kind === 'fill') Drills.fillBlank(b, x.d, x.p.key); else Drills.order(b, x.d, x.p.key);
+    });
+    if (!list.length) host.innerHTML = '<p class="intro">Nothing here. Every drill in this filter is passed. Try another pattern, or untick "Only not passed yet".</p>';
+  }
+  ['fp', 'ft', 'fu'].forEach(function(id){ document.getElementById(id).addEventListener('change', draw); });
+  document.getElementById('shuffle').addEventListener('click', function(){
+    order = drills.slice().sort(function(){ return Math.random() - .5; });
+    draw();
+  });
+  document.addEventListener('dsa:progress', stats);
+  stats();
+  draw();
+});
+</script>
+</body>
+</html>

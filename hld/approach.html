@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/board.css">
+<script src="assets/app.js"></script>
+<title>How to approach · System design</title>
+</head>
+<body>
+<main class="page">
+  <div class="head">
+    <p class="kind">The method</p>
+    <h1>How to approach any design question</h1>
+    <p class="one">Nine steps, always in this order. Each one produces something on the board, and each one makes the next step easier. Practise the order until it is automatic, so your attention goes to the problem.</p>
+  </div>
+  <div id="board"></div>
+  <h3>Where the 45 minutes go</h3>
+  <div class="timeline" id="timeline" role="img" aria-label="Time budget per step in a 45-minute interview"></div>
+  <div class="tl-legend"><span>0 min</span><span>45 min</span></div>
+  <div class="cols">
+    <div class="main" id="steps"></div>
+    <aside class="margin">
+      <h3>If you freeze</h3>
+      <ul class="say">
+        <li>Let me write down what we agreed so far, then pick the next step.</li>
+        <li>I'll start with the simplest version and find where it breaks.</li>
+        <li>Which part would you like me to go deeper on?</li>
+      </ul>
+      <h3>Always mention</h3>
+      <div class="nums">
+        <b>why</b><span>a reason for every box</span>
+        <b>numbers</b><span>QPS, storage, latency</span>
+        <b>failure</b><span>what happens when it dies</span>
+        <b>trade-off</b><span>what you gave up</span>
+      </div>
+    </aside>
+  </div>
+  <section class="s" id="practice"><h2>Practice the method</h2><p class="lead">Progress saves in this browser.</p><div id="drillhost"></div></section>
+</main>
+<footer>The example in every step is the URL shortener. Open its case study to see the full answer.</footer>
+<script src="assets/board.js"></script>
+<script src="assets/drills.js"></script>
+<script>
+HLD.bar('approach');
+var STEPS = [
+  { id: 'clarify', name: 'Clarify requirements', min: 4, goal: 'Turn a vague prompt into a small, agreed problem.',
+    do: ['Repeat the problem in one sentence', 'Ask who the users are and the main use cases', 'Agree on 3–5 core features; park the rest as "later"'],
+    ask: ['How many users, and how active?', 'Which features matter most for this interview?', 'Mobile, web or both? Global?'],
+    avoid: 'Designing before you know the scope. The interviewer wants to see you ask.',
+    ex: 'Create short links, redirect, custom alias, expiry, daily click counts. Later: accounts, editing, real-time analytics.' },
+  { id: 'nfr', name: 'Functional vs non-functional', min: 2, goal: 'Write what it does, then how well it must do it.',
+    do: ['Functional: verbs the user does', 'Non-functional: latency, availability, consistency, durability, scale', 'Say which non-functional requirement drives the design'],
+    ask: ['Is it OK if users see slightly old data?', 'What latency is acceptable for the main action?'],
+    avoid: 'Saying "it should be scalable and fast" without numbers.',
+    ex: 'Redirect p99 < 50 ms, 99.99% available, codes never collide. Read-heavy: that drives caching.' },
+  { id: 'estimate', name: 'Estimate', min: 4, goal: 'Find the order of magnitude: is this 10 requests per second or 1 million?',
+    do: ['Requests per second (average and peak)', 'Storage over the retention period', 'Bandwidth if media is involved', 'State the conclusion: what is big, what is small'],
+    ask: ['Can I assume 100M daily users?', 'How long do we keep data?'],
+    avoid: 'Exact arithmetic. Round to powers of ten; 1 day ≈ 100k seconds.',
+    ex: '100M links/month → ~40 writes/s; 100:1 → ~4k reads/s; 3 TB over 5 years.' },
+  { id: 'api', name: 'API', min: 3, goal: 'Pin down inputs and outputs of the main operations.',
+    do: ['3–5 endpoints with method, path, key fields', 'Pagination for lists, idempotency keys for creates', 'Mention auth briefly'],
+    ask: ['Is this a public API or internal?'],
+    avoid: 'Twenty endpoints, or skipping the API entirely.',
+    ex: 'POST /v1/links, GET /{code} → 302, GET /v1/links/{code}/stats.' },
+  { id: 'data', name: 'Data model', min: 4, goal: 'Pick entities, keys and the type of database from the access pattern.',
+    do: ['Main tables / entities and their keys', 'How each main query reads data', 'Database type and why; partition key if sharded'],
+    ask: ['Do we need transactions across these entities?'],
+    avoid: 'Choosing NoSQL "because it scales" without naming the access pattern.',
+    ex: 'links(code PK, long_url, expires_at). Always read by code → key-value store.' },
+  { id: 'hld', name: 'High-level design', min: 9, goal: 'Draw the simplest working system, then add one box per problem.',
+    do: ['Client → server → database first', 'Walk one read and one write through the diagram', 'Add LB, cache, queue, CDN, shards only with a named reason'],
+    ask: ['Does this cover the main flows we agreed on?'],
+    avoid: 'Drawing every box you know in the first minute.',
+    ex: 'LB → stateless app servers → Redis → KV store; ID-range service; Kafka for clicks.' },
+  { id: 'deep', name: 'Deep dives', min: 12, goal: 'Show depth on the hardest one or two parts.',
+    do: ['Ask the interviewer which area interests them', 'Compare 2–3 options and pick one with reasons', 'Cover failure cases'],
+    ask: ['Would you like me to go deeper on code generation or on caching?'],
+    avoid: 'Going deep on an easy part while the hard part stays vague.',
+    ex: 'Code generation: hash vs random vs counter ranges + base62. 301 vs 302.' },
+  { id: 'bottle', name: 'Bottlenecks and trade-offs', min: 5, goal: 'Show you know where it breaks and what you gave up.',
+    do: ['What breaks first at 10× traffic', 'Single points of failure and how they are covered', 'Trade-offs you made, in one line each'],
+    ask: ['Which failure mode worries you most?'],
+    avoid: 'Claiming the design has no weaknesses.',
+    ex: 'Viral link → hot key: local cache. Region outage → replicated KV, serve redirects anywhere.' },
+  { id: 'wrap', name: 'Wrap up', min: 2, goal: 'Leave a clear summary and a next step.',
+    do: ['Summarize the design in 3–4 sentences', 'Name what you would build next or monitor'],
+    ask: [],
+    avoid: 'Ending mid-sentence when time runs out. Watch the clock.',
+    ex: 'Read-heavy KV design with Redis in front; unique codes from ID ranges; analytics async. Next: abuse protection and multi-region.' }
+];
+var total = STEPS.reduce(function(s, x){ return s + x.min; }, 0);
+document.getElementById('timeline').innerHTML = STEPS.map(function(s, i){
+  return '<a href="#' + s.id + '" style="flex:' + s.min + '" title="' + HLD.esc(s.name) + ': ' + s.min + ' min">' + (i + 1) + '</a>';
+}).join('');
+document.getElementById('steps').innerHTML = STEPS.map(function(s, i){
+  return '<div class="stepblock" id="' + s.id + '"><h2><span class="fnum">' + (i + 1) + '</span>' + HLD.esc(s.name) + '</h2><span class="time">about ' + s.min + ' min</span>' +
+    '<p class="goal">' + HLD.fmt(s.goal) + '</p><div class="twocol"><div><h3>Do</h3><ul class="prose">' + s.do.map(function(x){ return '<li>' + HLD.fmt(x) + '</li>'; }).join('') + '</ul></div>' +
+    (s.ask.length ? '<div><h3>Ask</h3><ul class="say">' + s.ask.map(function(x){ return '<li>' + HLD.fmt(x) + '</li>'; }).join('') + '</ul></div>' : '') + '</div>' +
+    '<ul class="pitfalls"><li><b>Avoid</b><span>' + HLD.fmt(s.avoid) + '</span></li></ul>' +
+    '<div class="ex"><b>URL shortener example</b>' + HLD.fmt(s.ex) + '</div></div>';
+}).join('');
+
+var wb = { w: 880, h: 400, nodes: [
+  { id: 'req', label: 'Requirements', sub: 'functional · non-functional', kind: 'service', x: 130, y: 70, w: 210, h: 80 },
+  { id: 'est', label: 'Estimates', sub: 'QPS · storage', kind: 'service', x: 130, y: 190, w: 210, h: 70 },
+  { id: 'api', label: 'API + data model', sub: 'endpoints · tables', kind: 'service', x: 130, y: 320, w: 210, h: 90 },
+  { id: 'dia', label: 'High-level diagram', sub: 'the middle of the board', kind: 'ext', x: 520, y: 200, w: 300, h: 300 },
+  { id: 'trd', label: 'Trade-offs', sub: 'one line each', kind: 'service', x: 790, y: 330, w: 150, h: 80 },
+  { id: 'deep', label: 'Deep dive', sub: 'zoomed-in sketch', kind: 'service', x: 790, y: 80, w: 150, h: 80 }
+], edges: [['req', 'est', { arrow: false }], ['est', 'api', { arrow: false }], ['api', 'dia', { dash: true }], ['dia', 'deep', { dash: true }], ['dia', 'trd', { dash: true }]] };
+Board.mount(document.getElementById('board'), [{ name: 'Board layout', title: 'Where each step goes on a real whiteboard', diagram: wb, steps: [
+  { title: 'Top left: requirements', text: 'Write the agreed features and the non-functional numbers in a corner. You will point back at them all interview.', on: ['req'] },
+  { title: 'Under it: estimates', text: 'Three or four numbers with units. Circle the one that drives the design.', on: ['est'] },
+  { title: 'Then: API and data', text: 'A few endpoints and the main tables with their keys.', on: ['api'] },
+  { title: 'Middle: the diagram', text: 'Leave the biggest space for the architecture. Start with three boxes and grow it.', on: ['dia'] },
+  { title: 'Right: deep dive', text: 'Zoom into one component with a small separate sketch, so the main diagram stays readable.', on: ['deep'] },
+  { title: 'Bottom right: trade-offs', text: 'Keep a running list of choices and what they cost. It becomes your wrap-up.', on: ['trd'] }
+]}]);
+
+var approach = { slug: 'approach', drills: {
+  mcq: [
+    { id: 'mcq-first', title: 'First minute', ask: 'The interviewer says "Design Twitter." What do you do first?', options: [
+      ['Ask questions to narrow scope and agree on core features', true, 'Scoping is step one and the interviewer expects it.'],
+      ['Draw a load balancer and 10 microservices', false, 'Designing before knowing the problem.'],
+      ['Start writing the database schema', false, 'Too early; you do not know the features yet.'],
+      ['Ask what language to use', false, 'Not relevant for high-level design.']
+    ]},
+    { id: 'mcq-box', title: 'Adding a box', ask: 'When should you add a cache to your diagram?', options: [
+      ['When you can name the problem it solves, like 100:1 reads hitting the DB', true, 'Every box needs a reason tied to requirements or numbers.'],
+      ['Always, at the start', false, 'Boxes without reasons cost points.'],
+      ['Only if the interviewer asks', false, 'You should drive the design.'],
+      ['Never, caches cause bugs', false, 'Caches are often essential.']
+    ]},
+    { id: 'mcq-deep', title: 'Deep dive choice', ask: 'You have 12 minutes for deep dives. Which approach is best?', options: [
+      ['Ask the interviewer which area they care about, then compare options there', true, 'Shows judgement and focuses on what is graded.'],
+      ['Explain every component briefly', false, 'Breadth without depth.'],
+      ['Deep dive on the easiest component', false, 'Misses the hard part.'],
+      ['Write code for the load balancer', false, 'Not useful in HLD.']
+    ]}
+  ],
+  order: [
+    { id: 'ord-method', title: 'The nine steps', ask: 'Put the steps of the method in order.', steps: ['Clarify requirements', 'Functional vs non-functional', 'Estimate', 'API', 'Data model', 'High-level design', 'Deep dives', 'Bottlenecks and trade-offs', 'Wrap up'], extra: ['Pick the technologies first'] }
+  ],
+  fill: [
+    { id: 'fill-open', title: 'Opening line', text: 'Before I design anything, I want to clarify the [[requirements|scope]] and get rough [[numbers|estimates|scale]] for users and traffic.' }
+  ]
+}};
+Drills.all(document.getElementById('drillhost'), approach);
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Data Structures · DSA in Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/store.js"></script>
+<script src="assets/js/core.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">17 structures · live playgrounds · every snippet compiled</p>
+  <h1>Data structures, from memory to Java</h1>
+  <p class="lede">Patterns tell you <b>what</b> to do; structures decide <b>how fast</b> it runs. For each one: what it looks like in memory, why each operation costs what it costs, when to pick it, the exact Java, and a playground where you press the buttons and watch it change.</p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Sections">
+    <p>On this page</p>
+    <ol>
+      <li><a href="#list">Structures</a></li>
+      <li><a href="#quiz">Pick the structure</a></li>
+      <li><a href="#how">How to study</a></li>
+      <li><a href="#cheat">Cheat sheet</a></li>
+    </ol>
+  </nav>
+  <main>
+    <section class="sec" id="list">
+      <h2>Structures</h2>
+      <p class="intro">In study order. Badges show the cost of access, search, insert and delete. The bar counts drills passed and problems ticked.</p>
+      <div class="legend-o"><span class="bo o-good">O(1)</span> instant <span class="bo o-good2">O(log n)</span> fast <span class="bo o-mid">O(n)</span> grows with size <span class="bo o-bad">O(n log n)</span> slow</div>
+      <div id="groups"></div>
+    </section>
+
+    <section class="sec" id="quiz">
+      <h2>Pick the structure</h2>
+      <p class="intro">Read the need, pick the structure that fits best. This is the decision you make in the first minute of every problem. Results save in this browser.</p>
+      <div class="quiz" id="quizBox"></div>
+    </section>
+
+    <section class="sec" id="how">
+      <h2>How to study one structure</h2>
+      <p class="intro">About half an hour each. The goal is to see the memory picture whenever you type the Java.</p>
+      <ol class="steps">
+        <li><b>Play first</b><span>Use the playground at the top. Push it until something interesting happens: a resize, a collision, an eviction.</span></li>
+        <li><b>Step the demo</b><span>In "How it works", step through the mechanism and say why each step costs what it costs.</span></li>
+        <li><b>Learn the costs</b><span>Read the operations table. Remember the <i>reason</i> column, not just the Big-O.</span></li>
+        <li><b>Run the Java</b><span>Copy a snippet into your IDE, change it, predict the output before running.</span></li>
+        <li><b>Build it, drill it</b><span>Type the "Build it yourself" class from memory, then pass the drills and solve the listed problems.</span></li>
+      </ol>
+    </section>
+
+    <section class="sec" id="cheat">
+      <h2>Cheat sheet</h2>
+      <p class="intro">Which structure answers which question fastest. The full side-by-side table is on the <a href="compare.html">compare page</a>.</p>
+      <div id="cheatTbl"></div>
+    </section>
+  </main>
+</div>
+<footer>Progress is saved only in this browser. Problem numbers are LeetCode numbers.</footer>
+<script src="assets/js/ds-render.js"></script>
+<script src="data/ds-quiz.js"></script>
+<script>
+DSA.topbar('ds');
+DSA.boot('', DSA.dsFiles(''), function(){
+  var all = DSA.sortedDS(), esc = DSA.esc, fmt = DSA.fmt;
+  // Quiz results live under their own key so the Java toolbox counter on the home page stays separate.
+  function qget(i){ return Store.get('dsq:' + i, { seen: 0, ok: 0 }); }
+  function qset(i, ok){ var r = qget(i); r.seen++; if (ok) r.ok++; r.last = ok; Store.set('dsq:' + i, r); }
+
+  function render(){
+    var tot = { passed: 0, drills: 0, solved: 0, probs: 0 };
+    document.getElementById('groups').innerHTML = DSA.DS_GROUPS.map(function(g){
+      var list = all.filter(function(d){ return d.group === g[0]; });
+      if (!list.length) return '';
+      return '<h3 class="grp-h">' + esc(g[1]) + '</h3><div class="cards">' + list.map(function(d){
+        var p = DSA.dsProgress(d), c = d.compare || {};
+        tot.passed += p.passed; tot.drills += p.drills; tot.solved += p.solved; tot.probs += p.probs;
+        return '<a class="pcard" href="structure.html?d=' + d.slug + '"><span class="n">' + String(all.indexOf(d) + 1).padStart(2, '0') + ' · ' + esc(c.java || '') + '</span><h3>' + esc(d.title) + '</h3>' +
+          '<p>' + fmt(d.oneLiner.split('. ')[0] + '.') + '</p>' +
+          '<div class="bos">' + [c.access, c.search, c.insert, c.remove].filter(Boolean).map(DSA.bigO).join('') + '</div>' +
+          '<div class="bar" role="img" aria-label="' + p.pct + '% done"><i style="width:' + p.pct + '%"></i></div>' +
+          '<div class="pm"><span>' + p.passed + '/' + p.drills + ' drills</span><span>' + p.solved + '/' + p.probs + ' problems</span></div></a>';
+      }).join('') + '</div>';
+    }).join('');
+    var qs = 0, qok = 0;
+    (window.DS_QUIZ || []).forEach(function(_, i){ var r = qget(i); if (r.seen){ qs++; if (r.last) qok++; } });
+    document.getElementById('stats').innerHTML =
+      '<div class="stat"><b>' + tot.passed + ' / ' + tot.drills + '</b><span>drills passed</span></div>' +
+      '<div class="stat"><b>' + tot.solved + ' / ' + tot.probs + '</b><span>problems solved</span></div>' +
+      '<div class="stat"><b>' + qok + ' / ' + (window.DS_QUIZ || []).length + '</b><span>quiz cards right last time</span></div>';
+  }
+  render();
+
+  // ---------- quiz ----------
+  var box = document.getElementById('quizBox'), Q = window.DS_QUIZ || [], recent = [], session = { seen: 0, ok: 0 };
+  function title(slug){ var d = DSA.getDS(slug); return d ? d.title : slug; }
+  function pick(){
+    var idx = Q.map(function(_, i){ return i; }).filter(function(i){ return recent.indexOf(i) < 0; });
+    var w = idx.map(function(i){ var r = qget(i); return 1 + 3 * (r.seen - r.ok) + (r.seen ? 0 : 2); });
+    var t = w.reduce(function(a, b){ return a + b; }, 0), x = Math.random() * t;
+    for (var k = 0; k < idx.length; k++){ x -= w[k]; if (x <= 0) return idx[k]; }
+    return idx[idx.length - 1];
+  }
+  function show(){
+    var i = pick(), item = Q[i], done = false;
+    var opts = item.opts.concat([item.a]).sort(function(){ return Math.random() - .5; });
+    var r = qget(i);
+    box.innerHTML = '<div class="meta"><span>card ' + (i + 1) + ' of ' + Q.length + '</span><span>this card: ' + r.ok + ' / ' + r.seen + '</span><span>session: ' + session.ok + ' / ' + session.seen + '</span></div>' +
+      '<p class="q">' + fmt(item.q) + '</p><p class="ctx">Which structure fits best?</p>' +
+      '<div class="choices">' + opts.map(function(o){ return '<button type="button" data-v="' + o + '" style="font-family:var(--sans)">' + esc(title(o)) + '</button>'; }).join('') + '</div>' +
+      '<div class="ans" aria-live="polite"></div><div style="margin-top:12px"><button class="btn sm" type="button" data-a="next" hidden>Next card →</button></div>';
+    box.querySelectorAll('.choices button').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (done) return;
+        done = true;
+        var ok = b.dataset.v === item.a;
+        box.querySelectorAll('.choices button').forEach(function(x){ if (x.dataset.v === item.a) x.classList.add('ok'); });
+        if (!ok) b.classList.add('bad');
+        qset(i, ok);
+        session.seen++; if (ok) session.ok++;
+        recent.push(i); if (recent.length > 8) recent.shift();
+        box.querySelector('.ans').innerHTML = '<p class="res ' + (ok ? 'ok' : 'bad') + '" style="margin:0 0 6px;font-weight:700">' + (ok ? 'Correct.' : 'Better: ' + esc(title(item.a)) + '.') + '</p><p style="margin:0">' + fmt(item.why) +
+          ' <a href="structure.html?d=' + item.a + '">Open ' + esc(title(item.a)) + ' →</a></p>';
+        var nx = box.querySelector('[data-a=next]'); nx.hidden = false; nx.focus();
+        render();
+      });
+    });
+    box.querySelector('[data-a=next]').addEventListener('click', show);
+  }
+  if (Q.length) show();
+
+  // ---------- cheat sheet ----------
+  var rows = [
+    ['Get item by position', 'array', 'ArrayList / array: `get(i)` in O(1)'],
+    ['Add / remove at the end', 'arraylist', 'ArrayList `add`, or ArrayDeque as a stack'],
+    ['Add / remove at both ends', 'queue-deque', 'ArrayDeque: O(1) at either end'],
+    ['Most recent first', 'stack', 'ArrayDeque `push` / `pop`'],
+    ['Oldest first', 'queue-deque', 'ArrayDeque `offer` / `poll`'],
+    ['Find by key / count things', 'hashmap', 'HashMap: O(1) average'],
+    ['Is it in the set?', 'hashset', 'HashSet: O(1) average'],
+    ['Keep insertion order / LRU', 'linkedhashmap', 'LinkedHashMap'],
+    ['Smallest / largest next', 'heap', 'PriorityQueue: peek O(1), poll O(log n)'],
+    ['Sorted keys, floor / ceiling, ranges', 'bst-treemap', 'TreeMap / TreeSet: O(log n)'],
+    ['Prefix of words', 'trie', 'Trie: O(word length)'],
+    ['Connections, paths, components', 'graph', 'Adjacency list + BFS / DFS'],
+    ['Merge groups, same group?', 'union-find', 'Union-Find: nearly O(1)'],
+    ['Range sum with updates', 'fenwick', 'Fenwick tree: O(log n)'],
+    ['Range min / max with updates', 'segment-tree', 'Segment tree: O(log n)']
+  ];
+  document.getElementById('cheatTbl').innerHTML = '<div class="tbl"><table><thead><tr><th>You need to…</th><th>Reach for</th></tr></thead><tbody>' +
+    rows.map(function(r){ return '<tr><td>' + fmt(r[0]) + '</td><td><a href="structure.html?d=' + r[1] + '">' + esc(title(r[1])) + '</a> · ' + fmt(r[2]) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  DSA.tocSpy();
+});
+</script>
+</body>
+</html>

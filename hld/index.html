@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/board.css">
+<script src="assets/app.js"></script>
+<title>System design board</title>
+</head>
+<body>
+<main class="page">
+  <div class="head">
+    <h1>Draw it, then defend it.</h1>
+    <p class="one">System design interviews reward a calm, repeatable approach more than buzzwords. Learn each building block on a live board, rebuild real systems one box at a time, and practice saying <em>why</em> out loud.</p>
+  </div>
+  <div id="hero"></div>
+
+  <div class="cols">
+    <div class="main">
+      <section class="s" id="approach">
+        <h2>The approach, every time</h2>
+        <p class="lead">Nine steps in a 45-minute interview. The order matters more than the boxes you draw. <a href="approach.html">Open the full method</a>, or practise numbers in the <a href="estimate.html">estimation trainer</a>.</p>
+        <ol class="frame" id="frame"></ol>
+      </section>
+      <section class="s" id="concepts">
+        <h2>Building blocks</h2>
+        <p class="lead">Learn these first, roughly in this order. Every case study is a combination of them.</p>
+        <div class="shelf" id="conceptList"></div>
+      </section>
+      <section class="s" id="designs">
+        <h2>Case studies</h2>
+        <p class="lead">Each one walks the nine steps, with the board built up box by box.</p>
+        <div class="shelf" id="designList"></div>
+      </section>
+      <section class="s" id="progress">
+        <h2>Your progress</h2>
+        <p class="lead">Drills passed and self-check ticks are stored in this browser only.</p>
+        <button class="btn" type="button" id="reset">Reset all progress</button> <span class="why" id="resetMsg"></span>
+      </section>
+    </div>
+    <aside class="margin">
+      <h3>Say it in the interview</h3>
+      <ul class="say">
+        <li>Before I draw anything, can I check the scale and what matters most: latency, consistency or cost?</li>
+        <li>Let me start with the simplest thing that works, then fix its bottlenecks one at a time.</li>
+        <li>I'm choosing X over Y because of this requirement; the cost is Z.</li>
+      </ul>
+    </aside>
+  </div>
+</main>
+<footer>Built for interview practice. Content is general guidance; real systems vary.</footer>
+<script src="assets/board.js"></script>
+<script>
+HLD.bar('home');
+var STEPS = [
+  ['Clarify requirements', '3–5 min', 'Ask about users, scale, features and what matters most. Agree on a small scope.'],
+  ['Functional vs non-functional', '2 min', 'Write what the system does, then how well: latency, availability, consistency.'],
+  ['Estimate', '3–5 min', 'Requests per second, storage, bandwidth. Round hard; you need the order of magnitude.'],
+  ['API', '3 min', 'A few endpoints with inputs and outputs. It pins down what the system must store.'],
+  ['Data model', '3–5 min', 'Main entities, keys and the database type, chosen from the access pattern.'],
+  ['High-level design', '8–10 min', 'Start with client, server, database. Add one box per problem and say the problem.'],
+  ['Deep dives', '10–15 min', 'Go deep on the one or two hardest parts, or the ones the interviewer points at.'],
+  ['Bottlenecks and trade-offs', '5 min', 'What breaks first at 10× traffic, and what you gave up with each choice.'],
+  ['Wrap up', '2 min', 'Summarize the design in four sentences and name what you would do next.']
+];
+document.getElementById('frame').innerHTML = STEPS.map(function(s){ return '<li><h3>' + s[0] + '</h3><span class="time">' + s[1] + '</span><p>' + s[2] + '</p></li>'; }).join('');
+
+var hero = { w: 860, h: 250, nodes: [
+  { id: 'u', label: 'User', kind: 'client', x: 70, y: 125 },
+  { id: 'lb', label: 'Load balancer', kind: 'lb', x: 235, y: 125, w: 128 },
+  { id: 's', label: 'Service', sub: 'stateless', kind: 'service', x: 410, y: 125 },
+  { id: 'c', label: 'Cache', kind: 'cache', x: 610, y: 50 },
+  { id: 'd', label: 'Database', kind: 'db', x: 610, y: 195, w: 124, h: 60 },
+  { id: 'q', label: 'Queue', kind: 'queue', x: 790, y: 125 }
+], edges: [['u', 'lb'], ['lb', 's'], ['s', 'c'], ['s', 'd'], ['s', 'q']] };
+Board.mount(document.getElementById('hero'), [{ name: 'A request', title: 'One request, five building blocks', diagram: hero, steps: [
+  { title: 'A user clicks', text: 'Every design starts here: a request leaves a phone or browser.', on: ['u'], dots: [{ from: 'u', to: 'lb', label: 'GET /feed' }] },
+  { title: 'Load balancer', text: 'Picks a healthy server so no single machine is the bottleneck or the single point of failure.', on: ['lb'], dots: [{ from: 'lb', to: 's' }] },
+  { title: 'Cache first', text: 'Hot data is served from memory. Most reads end here.', on: ['c'], dots: [{ from: 's', to: 'c', label: 'get' }, { from: 'c', to: 's', label: 'hit', kind: 'res' }] },
+  { title: 'Database on a miss', text: 'The source of truth. Slower, so we protect it.', on: ['d'], dots: [{ from: 's', to: 'd', label: 'query' }, { from: 'd', to: 's', label: 'rows', kind: 'res' }] },
+  { title: 'Slow work goes to a queue', text: 'Emails, counters and fan-out happen later, so the user does not wait.', on: ['q'], dots: [{ from: 's', to: 'q', label: 'event', kind: 'evt' }] },
+  { title: 'Answer', text: 'The user gets a response in milliseconds. Each box you add in an interview should have a reason like these.', on: ['u', 's'], dots: [{ from: 's', to: 'lb', label: '200', kind: 'res' }, { from: 'lb', to: 'u', kind: 'res' }] }
+]}]);
+
+HLD.boot(function(){
+  function list(items, page, key){
+    var html = items.map(function(x){
+      var g = HLD.store.progress(x);
+      return '<a class="item" href="' + page + '?' + key + '=' + x.slug + '"><h3>' + HLD.esc(x.title) + '</h3><p>' + HLD.fmt(x.one).replace(/<\/?em>/g, '') + '</p>' +
+        '<div class="meter" role="img" aria-label="' + g.pct + '% done"><i style="width:' + g.pct + '%"></i></div></a>';
+    }).join('');
+    return html;
+  }
+  function render(){
+    document.getElementById('conceptList').innerHTML = list(HLD.byOrder(HLD.concepts), 'concept.html', 'c');
+    document.getElementById('designList').innerHTML = list(HLD.byOrder(HLD.designs), 'design.html', 'd');
+  }
+  render();
+  document.getElementById('reset').addEventListener('click', function(){
+    if (!confirm('Delete all saved progress? This cannot be undone.')) return;
+    HLD.store.clearAll(); render();
+    document.getElementById('resetMsg').textContent = 'Progress cleared.';
+  });
+});
+</script>
+</body>
+</html>

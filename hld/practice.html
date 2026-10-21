@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/board.css">
+<script src="assets/app.js"></script>
+<title>Drills · System design</title>
+</head>
+<body>
+<main class="page">
+  <div class="head">
+    <p class="kind">Mixed practice</p>
+    <h1>Drills from every topic</h1>
+    <p class="one">Scenarios, ordering, trade-off sentences and design-it-yourself boards from all building blocks and case studies. Mixing topics trains you to pick the right tool, not just recall one.</p>
+  </div>
+  <div class="filters">
+    <label for="fp">Topic</label><select id="fp"><option value="all">All topics</option></select>
+    <label for="ft">Type</label><select id="ft"><option value="all">All types</option><option value="mcq">Scenarios</option><option value="order">Order the steps</option><option value="fill">Say the trade-off</option><option value="palette">Design it yourself</option></select>
+    <label><input type="checkbox" id="fu"> Only not passed yet</label>
+    <button class="btn sm" type="button" id="shuffle">Shuffle</button>
+  </div>
+  <p class="why" id="count"></p>
+  <div id="list" style="max-width:66ch"></div>
+</main>
+<footer>Progress is saved in this browser only.</footer>
+<script src="assets/drills.js"></script>
+<script>
+HLD.bar('practice');
+HLD.boot(function(){
+  var all = [], fp = document.getElementById('fp');
+  var groups = [['Building blocks', HLD.byOrder(HLD.concepts), 'concept.html?c='], ['Case studies', HLD.byOrder(HLD.designs), 'design.html?d=']];
+  groups.forEach(function(g){
+    var og = document.createElement('optgroup'); og.label = g[0]; fp.appendChild(og);
+    g[1].forEach(function(p){
+      var o = document.createElement('option'); o.value = p.slug; o.textContent = p.title; og.appendChild(o);
+      var d = p.drills || {};
+      (d.mcq || []).forEach(function(x){ all.push({ p: p, d: x, t: 'mcq', link: g[2] }); });
+      (d.order || []).forEach(function(x){ all.push({ p: p, d: x, t: 'order', link: g[2] }); });
+      (d.fill || []).forEach(function(x){ all.push({ p: p, d: x, t: 'fill', link: g[2] }); });
+      if (d.palette) all.push({ p: p, d: d.palette, t: 'palette', link: g[2] });
+    });
+  });
+  var start = HLD.param('p'); if (start) fp.value = start;
+  var order = all.slice();
+  var FN = { mcq: Drills.mcq, order: Drills.order, fill: Drills.fill, palette: Drills.palette };
+  function draw(){
+    var p = fp.value, t = document.getElementById('ft').value, u = document.getElementById('fu').checked;
+    var list = order.filter(function(x){ return (p === 'all' || x.p.slug === p) && (t === 'all' || x.t === t) && (!u || !HLD.store.drillDone(x.p.slug, x.d.id)); });
+    var host = document.getElementById('list');
+    host.innerHTML = '';
+    var passed = all.filter(function(x){ return HLD.store.drillDone(x.p.slug, x.d.id); }).length;
+    document.getElementById('count').textContent = list.length + ' shown. ' + passed + ' of ' + all.length + ' drills passed overall.';
+    list.forEach(function(x){
+      var f = document.createElement('p'); f.className = 'from';
+      f.innerHTML = '<a href="' + x.link + x.p.slug + '#practice">' + HLD.esc(x.p.title) + '</a>';
+      host.appendChild(f);
+      var b = document.createElement('div'); host.appendChild(b);
+      FN[x.t](b, x.d, x.p.slug);
+    });
+    if (!list.length) host.innerHTML = '<p class="lead">Every drill in this filter is passed. Pick another topic, or untick "Only not passed yet".</p>';
+  }
+  ['fp', 'ft', 'fu'].forEach(function(id){ document.getElementById(id).addEventListener('change', draw); });
+  document.getElementById('shuffle').addEventListener('click', function(){ order = all.slice().sort(function(){ return Math.random() - .5; }); draw(); });
+  document.addEventListener('hld:progress', function(){
+    var passed = all.filter(function(x){ return HLD.store.drillDone(x.p.slug, x.d.id); }).length;
+    var c = document.getElementById('count'); c.textContent = c.textContent.replace(/\d+ of \d+ drills passed/, passed + ' of ' + all.length + ' drills passed');
+  });
+  draw();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DSA Patterns in Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/store.js"></script>
+<script src="assets/js/core.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">14 patterns · 17 data structures · Java templates · drills</p>
+  <h1>DSA patterns, from idea to Java code</h1>
+  <p class="lede">You can see how to solve it, but the code won't come out? Each pattern here gives you the picture to hold in your head, the exact Java template, the methods it uses, and drills that turn the idea into typing.</p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Sections">
+    <p>On this page</p>
+    <ol>
+      <li><a href="#patterns">Patterns</a></li>
+      <li><a href="#ds">Data structures</a></li>
+      <li><a href="#how">How to study</a></li>
+      <li><a href="#pick">Pick the pattern</a></li>
+      <li><a href="#idea">Idea to code</a></li>
+      <li><a href="#reset">Your progress</a></li>
+    </ol>
+  </nav>
+  <main>
+    <section class="sec" id="patterns">
+      <h2>Patterns</h2>
+      <p class="intro">In a sensible study order: each one reuses ideas from the ones before it. The bar shows problems ticked plus drills passed.</p>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="sec" id="ds">
+      <h2>Data structures</h2>
+      <p class="intro">Every pattern runs on a structure underneath. Learn how each one works in memory, what its operations cost and why, and the Java to use it, with a live playground for each.</p>
+      <div class="uses" id="dsCards"></div>
+      <p style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" href="structures.html">Open data structures →</a><a class="btn" href="compare.html">Compare them side by side</a></p>
+    </section>
+
+    <section class="sec" id="how">
+      <h2>How to study one pattern</h2>
+      <p class="intro">About one to three days per pattern. The goal is not to remember solutions, it is to make the template automatic so your brain is free for the problem.</p>
+      <ol class="steps">
+        <li><b>Watch the demo</b><span>Step through the animation at the top. Say out loud why each pointer or value moves.</span></li>
+        <li><b>Read the template</b><span>For each version, read the rules, then the code. Find where each rule shows up in the code.</span></li>
+        <li><b>Fill the blanks</b><span>Do the fill-in drills until they pass without hints. Then type the whole template once from memory.</span></li>
+        <li><b>Idea to code</b><span>Order the lines from the plain-English idea. This is the skill you said is missing: turning steps into Java.</span></li>
+        <li><b>Solve, then re-solve</b><span>Do the "Start here" problems. Solve each again the next day without looking. Tick it only then.</span></li>
+      </ol>
+    </section>
+
+    <section class="sec" id="pick">
+      <h2>Pick the pattern</h2>
+      <p class="intro">The words in a problem statement usually point at the pattern. Scan for these clues first.</p>
+      <div id="pickTable"></div>
+    </section>
+
+    <section class="sec" id="idea">
+      <h2>Idea to code, for any pattern</h2>
+      <p class="intro">When you know the approach but freeze at the keyboard, write these four things as comments first, then turn each comment into one or two lines of Java.</p>
+      <ol class="steps">
+        <li><b>State</b><span>What variables describe "where I am"? Pointers, a window, a map, a stack, a dp array. Declare them.</span></li>
+        <li><b>Loop</b><span>What do I walk over, and when do I stop? This is your <code>for</code> / <code>while</code> line.</span></li>
+        <li><b>Step</b><span>For each case, how does the state change? Every branch must make progress.</span></li>
+        <li><b>Answer</b><span>Where is the answer when the loop ends? What do I return for empty or "not found"?</span></li>
+      </ol>
+      <p class="note" style="margin-top:14px">Not sure which Java method you need? Open the <a href="java.html">Java toolbox</a> and drill the quiz for five minutes a day.</p>
+    </section>
+
+    <section class="sec" id="reset">
+      <h2>Your progress</h2>
+      <p class="intro">Ticked problems, passed drills and quiz results are stored in this browser only. Clearing site data or using another device starts fresh.</p>
+      <button class="btn" type="button" id="resetBtn">Reset all progress</button>
+      <span class="note" id="resetMsg" style="margin-left:10px"></span>
+    </section>
+  </main>
+</div>
+<footer>Templates are written for LeetCode-style Java. Problem numbers are LeetCode numbers.</footer>
+<script>
+DSA.topbar('home');
+DSA.boot('', DSA.dsFiles(''), function(){
+  var all = DSA.sorted(), esc = DSA.esc;
+  function render(){
+    var tot = {solved: 0, probs: 0, passed: 0, drills: 0};
+    document.getElementById('cards').innerHTML = all.map(function(p, i){
+      var g = Store.progress(p);
+      tot.solved += g.solved; tot.probs += g.probs; tot.passed += g.passed; tot.drills += g.drills;
+      return '<a class="pcard" href="pattern.html?p=' + p.slug + '"><span class="n">' + String(i + 1).padStart(2, '0') + '</span><h3>' + esc(p.title) + '</h3>' +
+        '<p>' + DSA.fmt(p.clues.slice(0, 4).join(' · ')) + '</p>' +
+        '<div class="bar" role="img" aria-label="' + g.pct + '% done"><i style="width:' + g.pct + '%"></i></div>' +
+        '<div class="pm"><span>' + g.solved + '/' + g.probs + ' problems</span><span>' + g.passed + '/' + g.drills + ' drills</span></div></a>';
+    }).join('');
+    var quizSeen = 0;
+    try { for (var k = 0; k < localStorage.length; k++) if ((localStorage.key(k) || '').indexOf('dsa-java:quiz:') === 0) quizSeen++; } catch(e){}
+    document.getElementById('stats').innerHTML =
+      '<div class="stat"><b>' + tot.solved + ' / ' + tot.probs + '</b><span>problems solved</span></div>' +
+      '<div class="stat"><b>' + tot.passed + ' / ' + tot.drills + '</b><span>code drills passed</span></div>' +
+      '<div class="stat"><b>' + quizSeen + '</b><span>Java methods practiced</span></div>';
+  }
+  render();
+  document.getElementById('dsCards').innerHTML = DSA.sortedDS().map(function(d){
+    return '<a class="use" href="structure.html?d=' + d.slug + '"><b>' + esc(d.title) + '</b><span>' + esc((d.compare && d.compare.java) || '') + '</span></a>';
+  }).join('');
+  document.getElementById('pickTable').innerHTML = '<div class="tbl"><table><thead><tr><th>If the problem says…</th><th>Pattern</th></tr></thead><tbody>' +
+    all.map(function(p){ return '<tr><td>' + DSA.fmt(p.clues.join(', ')) + '</td><td><a href="pattern.html?p=' + p.slug + '">' + esc(p.title) + '</a></td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if (!confirm('Delete all saved progress (problems, drills, quiz)? This cannot be undone.')) return;
+    Store.clearAll();
+    render();
+    document.getElementById('resetMsg').textContent = 'Progress cleared.';
+  });
+  DSA.tocSpy();
+});
+</script>
+</body>
+</html>

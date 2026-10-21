@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:ital,wght@0,400;0,500;0,700;1,400&family=Red+Hat+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lld.css">
+<script src="assets/app.js"></script>
+<title>Approach · Object design</title>
+</head>
+<body>
+<main class="page">
+  <div class="title">
+    <p class="crumb"><a href="index.html">Overview</a> / Method</p>
+    <h1>How to approach an LLD interview</h1>
+    <p class="one">Eight steps in about 45 minutes. Each produces something you can point at, and each makes the next one easier. The running example is the <a href="design.html?d=parking-lot">parking lot</a>.</p>
+  </div>
+  <div class="cols">
+    <div class="main">
+      <ol class="steps" id="steps"></ol>
+      <section class="s" id="practice"><h2>Practice the method</h2><p class="lead">Progress saves in this browser.</p><div id="drillhost"></div></section>
+    </div>
+    <aside class="rail">
+      <h3>If you freeze</h3>
+      <ul class="lines-say">
+        <li>Let me go back to the requirements and list the nouns.</li>
+        <li>I'll start with the simplest classes that work, then refine.</li>
+        <li>Which part would you like me to code in detail?</li>
+      </ul>
+      <h3>Red flags</h3>
+      <div class="facts">
+        <b>Manager</b><span>vague god classes</span>
+        <b>instanceof</b><span>missing polymorphism</span>
+        <b>public</b><span>fields everywhere</span>
+        <b>no locks</b><span>shared state ignored</span>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer>Times are a guide for a 45-minute round.</footer>
+<script src="assets/drills.js"></script>
+<script>
+LLD.bar('approach');
+var STEPS = [
+  { t: 'Clarify requirements', m: 5, goal: 'Agree on a small, concrete scope.', do: ['Repeat the problem in one sentence', 'List the actors (driver, admin, gate)', 'List 3–5 core use cases; park the rest as out of scope', 'Ask what must never go wrong (double booking, lost money)'], ex: 'Park, issue ticket, pay on exit, multiple floors. Out: reservations, payments processing.' },
+  { t: 'Find the entities', m: 5, goal: 'Turn nouns into candidate classes.', do: ['Underline nouns in the requirements', 'Keep nouns with their own data or behaviour', 'Small fixed sets become enums', 'Drop vague "Manager/Helper" classes'], ex: 'ParkingLot, ParkingFloor, ParkingSpot, Vehicle, Ticket, SpotSize (enum).' },
+  { t: 'Draw the class diagram', m: 8, goal: 'Show who owns, has, uses and is-a.', do: ['Draw boxes for each entity', 'Add relationships: composition, aggregation, association, inheritance', 'Add only the key fields and methods', 'Mark interfaces where behaviour varies'], ex: 'Lot ◆ floors ◆ spots; Vehicle ◁ Car/Bike/Truck; PricingStrategy interface.' },
+  { t: 'Define the main methods', m: 4, goal: 'Public API = use cases.', do: ['One method per use case on the entry-point class', 'Clear inputs and outputs', 'Decide what errors look like (exception, Optional, result)'], ex: '`Ticket park(Vehicle v)`, `int unpark(String ticketId)`.' },
+  { t: 'Walk the key flows', m: 5, goal: 'Prove the classes work together.', do: ['Trace one main use case as a sequence of calls', 'Check every call has an owner', 'Spot missing classes or responsibilities'], ex: 'Gate → lot.park → floor.findSpot → spot.canFit → ticket.' },
+  { t: 'Apply patterns where things vary', m: 5, goal: 'Protect the parts that will change.', do: ['Ask "what will they add next?"', 'Strategy for swappable rules, State for lifecycles, Observer for notifications, Factory for creation', 'Name the pattern and the reason'], ex: 'Pricing changes often → PricingStrategy.' },
+  { t: 'Write the core code', m: 10, goal: 'Show you can turn the design into clean Java.', do: ['Code the classes that hold the logic', 'Private fields, small methods, meaningful names', 'Skip boilerplate getters unless asked'], ex: 'ParkingLot.park/unpark, ParkingSpot.canFit, HourlyPricing.fee.' },
+  { t: 'Handle concurrency and edge cases', m: 3, goal: 'Show the design survives real use.', do: ['Find check-then-act sequences on shared state', 'Make them atomic (lock, atomic op, DB constraint)', 'List invalid inputs and how they are rejected'], ex: 'Two gates, one spot: synchronized park.' }
+];
+document.getElementById('steps').innerHTML = STEPS.map(function(s){
+  return '<li><h3>' + s.t + '</h3><span class="time">about ' + s.m + ' min</span><p>' + LLD.fmt(s.goal) + '</p><ul class="prose">' + s.do.map(function(d){ return '<li>' + LLD.fmt(d) + '</li>'; }).join('') + '</ul><p><b>Parking lot:</b> ' + LLD.fmt(s.ex) + '</p></li>';
+}).join('');
+Drills.all(document.getElementById('drillhost'), { slug: 'approach', drills: {
+  mcq: [
+    { id: 'mcq-start', title: 'First move', ask: 'The interviewer says "Design a library system." What do you do first?', options: [['Clarify scope: actors, use cases, what is out of scope', true, 'Requirements first; the design follows from them.'], ['Write the Book class', false, 'Too early.'], ['Pick design patterns', false, 'Patterns follow from what varies.'], ['Draw a database schema', false, 'LLD is about classes and behaviour first.']] },
+    { id: 'mcq-pattern', title: 'When to use a pattern', ask: 'When should you introduce a Strategy in an LLD interview?', options: [['When a rule clearly varies or will change (pricing, assignment)', true, 'Patterns protect real change points.'], ['Always, to show you know patterns', false, 'Unnecessary patterns look like over-engineering.'], ['Never', false, 'They are expected where things vary.'], ['Only if asked', false, 'You should drive the design.']] },
+    { id: 'mcq-manager', title: 'Naming', ask: 'Your design has `ParkingManager` with 25 methods. Best fix?', options: [['Split responsibilities into focused classes (lot, floor, pricing, tickets)', true, 'Each class should have one reason to change.'], ['Rename it to ParkingService', false, 'Same god class.'], ['Make it a singleton', false, 'Does not fix responsibilities.'], ['Add more methods', false, 'Worse.']] }
+  ],
+  order: [{ id: 'ord-method', title: 'The method', ask: 'Put the steps in order.', steps: ['Clarify requirements', 'Find the entities', 'Draw the class diagram', 'Define the main methods', 'Walk the key flows', 'Apply patterns where things vary', 'Write the core code', 'Handle concurrency and edge cases'], extra: ['Choose a database'] }]
+}});
+</script>
+</body>
+</html>

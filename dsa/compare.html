@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compare Structures · DSA in Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/store.js"></script>
+<script src="assets/js/core.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">Side by side</p>
+  <h1>Compare data structures</h1>
+  <p class="lede">Every structure is a trade: something gets fast because something else gets slow. Use the chooser when you know what you need, the table when you want the whole picture, and the duels when two Java classes look interchangeable.</p>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Sections">
+    <p>On this page</p>
+    <ol>
+      <li><a href="#need">I need to…</a></li>
+      <li><a href="#table">Big-O table</a></li>
+      <li><a href="#duels">Java class duels</a></li>
+    </ol>
+  </nav>
+  <main>
+    <section class="sec" id="need">
+      <h2>I need to…</h2>
+      <p class="intro">Pick what your problem does most often. The answer is the structure that makes <b>that</b> operation cheap.</p>
+      <div class="filters" id="needs" role="group" aria-label="Needs"></div>
+      <div id="needOut" aria-live="polite"></div>
+    </section>
+
+    <section class="sec" id="table">
+      <h2>Big-O table</h2>
+      <p class="intro">Average cases. "avg" means hashing with a decent hash function; "amortized" means occasional slow steps averaged over many fast ones. Click a name to open its page.</p>
+      <div class="legend-o"><span class="bo o-good">O(1)</span> instant <span class="bo o-good2">O(log n)</span> fast <span class="bo o-mid">O(n)</span> grows with size <span class="bo o-bad">O(n log n)</span> slow</div>
+      <div id="bigTbl"></div>
+    </section>
+
+    <section class="sec" id="duels">
+      <h2>Java class duels</h2>
+      <p class="intro">Pairs that compile in the same places but behave differently.</p>
+      <div class="duel" id="duelBox"></div>
+    </section>
+  </main>
+</div>
+<footer>All structures are linked from the <a href="structures.html">structures page</a>.</footer>
+<script src="assets/js/ds-render.js"></script>
+<script>
+DSA.topbar('ds');
+DSA.boot('', DSA.dsFiles(''), function(){
+  var all = DSA.sortedDS(), esc = DSA.esc, fmt = DSA.fmt;
+  function link(slug){ var d = DSA.getDS(slug); return d ? '<a href="structure.html?d=' + slug + '">' + esc(d.title) + '</a>' : esc(slug); }
+
+  // ---------- chooser ----------
+  var NEEDS = [
+    ['Read the i-th item', [['arraylist', '`get(i)` is O(1): plain array indexing.'], ['array', 'Same, when the size is fixed.']], 'linked-list', 'A linked list walks i nodes.'],
+    ['Look up a value by key', [['hashmap', 'O(1) average; key → bucket by hash.'], ['bst-treemap', 'O(log n), but keys stay sorted.']], 'arraylist', 'A list would scan every entry.'],
+    ['Check "seen before?"', [['hashset', '`add` returns false for a repeat; O(1).']], 'arraylist', '`list.contains` is O(n).'],
+    ['Get the smallest / largest repeatedly', [['heap', '`peek` O(1), `poll` O(log n).'], ['bst-treemap', '`firstKey` / `lastKey`, plus deletes of any key.']], 'arraylist', 'Re-sorting after every change is O(n log n).'],
+    ['Most recent first', [['stack', 'ArrayDeque `push` / `pop`, O(1).']], 'queue-deque', 'A queue returns the oldest.'],
+    ['Oldest first', [['queue-deque', 'ArrayDeque `offer` / `poll`, O(1).']], 'heap', 'PriorityQueue orders by value, not arrival.'],
+    ['Add / remove at both ends', [['queue-deque', 'ArrayDeque, circular buffer, O(1) at each end.']], 'arraylist', '`remove(0)` on ArrayList shifts everything.'],
+    ['Closest key below / above x', [['bst-treemap', '`floorKey` / `ceilingKey` in O(log n).']], 'hashmap', 'Hashing scatters keys; no notion of "nearby".'],
+    ['Keep insertion order, or LRU', [['linkedhashmap', 'Hash lookup plus a linked list in order.']], 'hashmap', 'HashMap iteration order is not reliable.'],
+    ['Words that start with a prefix', [['trie', 'Walk the prefix in O(L).'], ['bst-treemap', '`subSet(p, p + Character.MAX_VALUE)` for occasional queries.']], 'hashset', 'A set only answers exact words.'],
+    ['Shortest path / reachability', [['graph', 'Adjacency list with BFS (unweighted) or Dijkstra (weighted).']], 'union-find', 'Union-Find knows "connected?", not the path.'],
+    ['Merge groups, ask "same group?"', [['union-find', 'Nearly O(1) per operation.']], 'graph', 'Re-running BFS for every question is O(V + E) each.'],
+    ['Range sum with updates', [['fenwick', 'O(log n) both; shortest code.'], ['segment-tree', 'O(log n) both; also does min / max.']], 'array', 'Prefix sums need an O(n) repair per update.'],
+    ['Build a long string', [['string', '`StringBuilder.append`, O(1) amortized.']], 'string', '`s += x` in a loop is O(n²).']
+  ];
+  var needs = document.getElementById('needs');
+  needs.innerHTML = NEEDS.map(function(n, i){ return '<button class="btn sm" type="button" data-i="' + i + '" aria-pressed="false">' + esc(n[0]) + '</button>'; }).join('');
+  function choose(i){
+    var n = NEEDS[i];
+    needs.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.i == i ? 'true' : 'false'); b.classList.toggle('primary', b.dataset.i == i); });
+    document.getElementById('needOut').innerHTML = '<div class="uses" style="margin-top:6px">' + n[1].map(function(r, k){
+      var d = DSA.getDS(r[0]), c = (d && d.compare) || {};
+      return '<a class="use" href="structure.html?d=' + r[0] + '"><b>' + (k ? 'Also: ' : 'Use: ') + esc(d ? d.title : r[0]) + '</b><span>' + fmt(r[1]) + '</span><span>' + [c.access, c.search, c.insert, c.remove].filter(Boolean).map(DSA.bigO).join(' ') + '</span></a>';
+    }).join('') + '<div class="bug"><b>Avoid: ' + esc((DSA.getDS(n[2]) || {}).title || n[2]) + '</b><p>' + fmt(n[3]) + '</p></div></div>';
+  }
+  needs.querySelectorAll('button').forEach(function(b){ b.addEventListener('click', function(){ choose(+b.dataset.i); }); });
+  choose(0);
+
+  // ---------- table ----------
+  document.getElementById('bigTbl').innerHTML = '<div class="tbl cmp"><table><thead><tr><th>Structure</th><th>Access</th><th>Search</th><th>Insert</th><th>Delete</th><th>Order</th><th>Memory</th><th>Java</th></tr></thead><tbody>' +
+    all.map(function(d){
+      var c = d.compare || {};
+      return '<tr><td>' + link(d.slug) + (c.note ? '<br><span class="note">' + esc(c.note) + '</span>' : '') + '</td>' +
+        [c.access, c.search, c.insert, c.remove].map(function(x){ return '<td>' + (x ? DSA.bigO(x) : '') + '</td>'; }).join('') +
+        '<td>' + esc(c.ordered || '') + '</td><td>' + esc(c.space || '') + '</td><td><code>' + esc(c.java || '') + '</code></td></tr>';
+    }).join('') + '</tbody></table></div>';
+
+  // ---------- duels ----------
+  var DUELS = [
+    ['ArrayList vs LinkedList', ['', 'ArrayList', 'LinkedList'], [['get(i)', 'O(1)', 'O(n)'], ['add at end', 'O(1) amortized', 'O(1)'], ['add / remove at front', 'O(n)', 'O(1)'], ['insert at an iterator', 'O(n)', 'O(1)'], ['memory per item', 'one slot', 'node + 2 links']], 'Pick **ArrayList** almost always. LinkedList only wins for many inserts at an iterator you already hold; for front/back work, ArrayDeque beats both.', ['arraylist', 'linked-list']],
+    ['HashMap vs TreeMap vs LinkedHashMap', ['', 'HashMap', 'TreeMap', 'LinkedHashMap'], [['get / put', 'O(1) avg', 'O(log n)', 'O(1) avg'], ['iteration order', 'none', 'sorted', 'insertion / access'], ['floor / ceiling / ranges', 'no', 'yes', 'no'], ['null key', 'one', 'no', 'one']], 'Default to **HashMap**. Need sorted keys or nearest-key queries: **TreeMap**. Need a stable order or LRU: **LinkedHashMap**.', ['hashmap', 'bst-treemap', 'linkedhashmap']],
+    ['ArrayDeque vs Stack vs LinkedList', ['', 'ArrayDeque', 'Stack', 'LinkedList'], [['push / pop', 'O(1)', 'O(1), synchronized', 'O(1)'], ['queue ops', 'yes', 'no', 'yes'], ['allows null', 'no', 'yes', 'yes'], ['print order', 'top first', 'bottom first', 'front first']], 'Use **ArrayDeque** for stacks, queues and deques. `Stack` is a legacy class.', ['queue-deque', 'stack']],
+    ['PriorityQueue vs TreeSet', ['', 'PriorityQueue', 'TreeSet'], [['min', 'peek O(1)', 'first O(log n)'], ['remove min', 'O(log n)', 'O(log n)'], ['remove any item', 'O(n)', 'O(log n)'], ['duplicates', 'yes', 'no (use TreeMap counts)'], ['max too', 'no (one end)', 'yes, both ends']], 'Only ever need the smallest: **PriorityQueue**. Need deletes of arbitrary items, both ends, or no duplicates: **TreeSet**.', ['heap', 'bst-treemap']],
+    ['int[] vs ArrayList<Integer>', ['', 'int[]', 'ArrayList<Integer>'], [['size', 'fixed', 'grows'], ['memory per item', '4 bytes', '~16–20 bytes (boxed)'], ['sort with comparator', 'no', 'yes'], ['== on items', 'safe', 'unsafe above 127']], 'Know the size and store numbers: **int[]**. Size unknown or need collection methods: **ArrayList**.', ['array', 'arraylist']],
+    ['Fenwick vs segment tree', ['', 'Fenwick', 'Segment tree'], [['prefix / range sum', 'O(log n)', 'O(log n)'], ['range min / max', 'no', 'yes'], ['code', '~10 lines', '~30 lines'], ['memory', 'n + 1', '2n–4n']], 'Sums only: **Fenwick**. Min, max, or anything fancier: **segment tree**.', ['fenwick', 'segment-tree']]
+  ];
+  document.getElementById('duelBox').innerHTML = DUELS.map(function(d){
+    return '<div class="concept"><h3>' + esc(d[0]) + '</h3><div class="tbl" style="margin-bottom:10px"><table style="min-width:0"><thead><tr>' + d[1].map(function(h){ return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      d[2].map(function(r){ return '<tr>' + r.map(function(c, i){ return '<td>' + (i ? (/^O\(/.test(c) ? DSA.bigO(c) : fmt(c)) : '<b>' + fmt(c) + '</b>') + '</td>'; }).join('') + '</tr>'; }).join('') +
+      '</tbody></table></div><p>' + fmt(d[3]) + '</p><p class="note" style="margin:0">' + d[4].map(link).join(' · ') + '</p></div>';
+  }).join('');
+  DSA.tocSpy();
+});
+</script>
+</body>
+</html>

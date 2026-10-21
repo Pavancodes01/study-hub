@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:ital,wght@0,400;0,500;0,700;1,400&family=Red+Hat+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lld.css">
+<script src="assets/app.js"></script>
+<title>Object design: LLD in Java</title>
+</head>
+<body>
+<main class="page">
+  <div class="title">
+    <h1>Low-level design, one decision at a time</h1>
+    <p class="one">Learn the principles and the 16 patterns interviews ask about, then watch real systems take shape class by class, with the <strong>Java code lighting up</strong> beside every step.</p>
+  </div>
+  <div id="stage"></div>
+  <div class="cols">
+    <div class="main">
+      <section class="s" id="method">
+        <h2>The method</h2>
+        <p class="lead">Every LLD interview follows the same path. <a href="approach.html">Open the full method</a> with examples and drills.</p>
+        <ol class="steps" id="steps"></ol>
+      </section>
+      <section class="s" id="basics"><h2>Basics</h2><p class="lead">OOP, SOLID and how to read UML. Start here.</p><div id="basicList"></div></section>
+      <section class="s" id="patterns"><h2>Design patterns</h2><p class="lead">The 16 patterns that come up most, each with the problem it fixes, a diagram, code and drills.</p><div id="patternList"></div></section>
+      <section class="s" id="designs"><h2>Case studies</h2><p class="lead">Full designs with compiled, runnable Java.</p><div class="shelf" id="designList"></div></section>
+      <section class="s" id="progress"><h2>Your progress</h2><p class="lead">Passed drills and ticked checklists are saved in this browser only.</p>
+        <button class="btn" type="button" id="reset">Reset all progress</button> <span class="lead" id="resetMsg"></span></section>
+    </div>
+    <aside class="rail">
+      <h3>Say it in the interview</h3>
+      <ul class="lines-say">
+        <li>Let me list the nouns in the requirements; the important ones become classes.</li>
+        <li>This part changes often, so I'll put it behind an interface.</li>
+        <li>These two steps must be atomic, so they happen inside one lock.</li>
+      </ul>
+      <h3>Remember</h3>
+      <div class="facts">
+        <b>nouns</b><span>become classes</span>
+        <b>verbs</b><span>become methods</span>
+        <b>varies</b><span>goes behind an interface</span>
+        <b>shared</b><span>needs a lock</span>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer>All Java on this site compiles and runs as shown. Progress is saved in this browser only.</footer>
+<script src="assets/uml.js"></script>
+<script>
+LLD.bar('home');
+var STEPS = [
+  ['Clarify requirements', 'Ask what is in scope, which actors exist, and what must never go wrong.'],
+  ['Find the entities', 'Underline nouns. Important ones with data or behaviour become classes or enums.'],
+  ['Draw the class diagram', 'Relationships first: owns, has, uses, is-a. Fields and methods after.'],
+  ['Define the main methods', 'The public API follows the use cases: park, unpark, book, cancel.'],
+  ['Walk the key flows', 'Trace one or two use cases as a sequence of calls.'],
+  ['Apply patterns where things vary', 'Strategy, State, Observer, Factory: only where a real change point exists.'],
+  ['Write the core code', 'The classes that carry the logic, not every getter.'],
+  ['Handle concurrency and edge cases', 'What happens when two requests arrive together, or input is invalid?']
+];
+document.getElementById('steps').innerHTML = STEPS.map(function(s){ return '<li><h3>' + s[0] + '</h3><p>' + s[1] + '</p></li>'; }).join('');
+LLD.boot(function(){
+  function entry(x, page, key){
+    var g = LLD.store.progress(x);
+    return '<a class="entry" href="' + page + '?' + key + '=' + x.slug + '"><h3>' + LLD.esc(x.title) + '</h3><p>' + LLD.fmt(x.one).replace(/<\/?strong>/g, '') + '</p><div class="bar" role="img" aria-label="' + g.pct + '% done"><i style="width:' + g.pct + '%"></i></div></a>';
+  }
+  function grouped(list, field, page, key){
+    var groups = [];
+    list.forEach(function(x){ if (groups.indexOf(x[field]) < 0) groups.push(x[field]); });
+    return groups.map(function(g){
+      return '<p class="group-h">' + LLD.esc(g) + '</p><div class="shelf">' + list.filter(function(x){ return x[field] === g; }).map(function(x){ return entry(x, page, key); }).join('') + '</div>';
+    }).join('');
+  }
+  function render(){
+    document.getElementById('basicList').innerHTML = grouped(LLD.byOrder(LLD.basics), 'group', 'basics.html', 'b');
+    document.getElementById('patternList').innerHTML = grouped(LLD.byOrder(LLD.patterns), 'kind', 'pattern.html', 'p');
+    document.getElementById('designList').innerHTML = LLD.byOrder(LLD.designs).map(function(x){ return entry(x, 'design.html', 'd'); }).join('');
+  }
+  render();
+  var lot = LLD.find(LLD.designs, 'parking-lot');
+  if (lot){
+    var f = Object.assign({}, lot.flows[0], { code: lot.code.src, file: lot.code.file, name: 'Parking lot', title: 'A design, built one decision at a time' });
+    UML.mount(document.getElementById('stage'), [f]);
+  }
+  document.getElementById('reset').addEventListener('click', function(){
+    if (!confirm('Delete all saved progress? This cannot be undone.')) return;
+    LLD.store.clearAll(); render(); document.getElementById('resetMsg').textContent = 'Progress cleared.';
+  });
+});
+</script>
+</body>
+</html>

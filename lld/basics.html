@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:ital,wght@0,400;0,500;0,700;1,400&family=Red+Hat+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lld.css">
+<script src="assets/app.js"></script>
+<title>Object design</title>
+</head>
+<body>
+<main id="app"><div class="page"><p class="title">Loading…</p></div></main>
+<footer>All Java on this site compiles as shown. Progress is saved in this browser only.</footer>
+<script src="assets/uml.js"></script>
+<script src="assets/drills.js"></script>
+<script src="assets/pages.js"></script>
+<script>
+LLD.bar('');
+LLD.boot(function(){
+  var all = LLD.byOrder(LLD.basics);
+  var item = LLD.find(all, LLD.param('b')) || all[0];
+  if (!item){ document.getElementById('app').innerHTML = '<div class="page"><p class="title">Nothing here yet. Go back to the <a href="index.html">overview</a>.</p></div>'; return; }
+  renderBasic(item, all);
+}, ['basics']);
+</script>
+</body>
+</html>

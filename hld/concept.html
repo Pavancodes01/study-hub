@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/board.css">
+<script src="assets/app.js"></script>
+<title>System design</title>
+</head>
+<body>
+<main id="app"><div class="page"><p class="head">Loading the board…</p></div></main>
+<footer>Progress is saved in this browser only.</footer>
+<script src="assets/board.js"></script>
+<script src="assets/drills.js"></script>
+<script src="assets/pages.js"></script>
+<script>
+HLD.bar('');
+HLD.boot(function(){
+  var list = HLD.byOrder(HLD.concepts);
+  var item = HLD.find(list, HLD.param('c')) || list[0];
+  if (!item){ document.getElementById('app').innerHTML = '<div class="page"><p class="head">This page has no content yet. Go back to the <a href="index.html">board</a>.</p></div>'; return; }
+  renderConcept(item, list);
+});
+</script>
+</body>
+</html>

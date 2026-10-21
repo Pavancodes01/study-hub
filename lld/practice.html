@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:ital,wght@0,400;0,500;0,700;1,400&family=Red+Hat+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lld.css">
+<script src="assets/app.js"></script>
+<title>Drills · Object design</title>
+</head>
+<body>
+<main class="page">
+  <div class="title">
+    <p class="crumb"><a href="index.html">Overview</a> / Drills</p>
+    <h1>Drills from every topic</h1>
+    <p class="one">Scenarios, Java fill-ins, step ordering and class-design drills from all pages. Mixing topics trains you to pick the right pattern, not just recall one.</p>
+  </div>
+  <div class="filters">
+    <label for="fp">Topic</label><select id="fp"><option value="all">All topics</option></select>
+    <label for="ft">Type</label><select id="ft"><option value="all">All types</option><option value="mcq">Scenarios</option><option value="code">Write the Java</option><option value="order">Order the steps</option><option value="classes">Design the classes</option></select>
+    <label><input type="checkbox" id="fu"> Only not passed yet</label>
+    <button class="btn sm" type="button" id="shuffle">Shuffle</button>
+  </div>
+  <p class="lead" id="count"></p>
+  <div id="list" style="max-width:76ch"></div>
+</main>
+<footer>Progress is saved in this browser only.</footer>
+<script src="assets/drills.js"></script>
+<script>
+LLD.bar('practice');
+LLD.boot(function(){
+  var all = [], fp = document.getElementById('fp');
+  [['Basics', LLD.byOrder(LLD.basics), 'basics.html?b='], ['Patterns', LLD.byOrder(LLD.patterns), 'pattern.html?p='], ['Case studies', LLD.byOrder(LLD.designs), 'design.html?d=']].forEach(function(g){
+    var og = document.createElement('optgroup'); og.label = g[0]; fp.appendChild(og);
+    g[1].forEach(function(p){
+      var o = document.createElement('option'); o.value = p.slug; o.textContent = p.title; og.appendChild(o);
+      var d = p.drills || {};
+      (d.mcq || []).forEach(function(x){ all.push({ p: p, d: x, t: 'mcq', link: g[2] }); });
+      (d.code || []).forEach(function(x){ all.push({ p: p, d: x, t: 'code', link: g[2] }); });
+      (d.order || []).forEach(function(x){ all.push({ p: p, d: x, t: 'order', link: g[2] }); });
+      if (d.classes) all.push({ p: p, d: d.classes, t: 'classes', link: g[2] });
+    });
+  });
+  var start = LLD.param('p'); if (start) fp.value = start;
+  var order = all.slice();
+  function passedCount(){ return all.filter(function(x){ return LLD.store.passed(x.p.slug, x.d.id); }).length; }
+  function draw(){
+    var p = fp.value, t = document.getElementById('ft').value, u = document.getElementById('fu').checked;
+    var list = order.filter(function(x){ return (p === 'all' || x.p.slug === p) && (t === 'all' || x.t === t) && (!u || !LLD.store.passed(x.p.slug, x.d.id)); });
+    var host = document.getElementById('list'); host.innerHTML = '';
+    document.getElementById('count').textContent = list.length + ' shown. ' + passedCount() + ' of ' + all.length + ' drills passed overall.';
+    list.forEach(function(x){
+      var f = document.createElement('p'); f.className = 'from';
+      f.innerHTML = '<a href="' + x.link + x.p.slug + '#practice">' + LLD.esc(x.p.title) + '</a>';
+      host.appendChild(f);
+      var b = document.createElement('div'); host.appendChild(b);
+      Drills[x.t](b, x.d, x.p.slug);
+    });
+    if (!list.length) host.innerHTML = '<p class="lead">Every drill in this filter is passed. Pick another topic or untick "Only not passed yet".</p>';
+  }
+  ['fp', 'ft', 'fu'].forEach(function(id){ document.getElementById(id).addEventListener('change', draw); });
+  document.getElementById('shuffle').addEventListener('click', function(){ order = all.slice().sort(function(){ return Math.random() - .5; }); draw(); });
+  document.addEventListener('lld:progress', function(){ var c = document.getElementById('count'); c.textContent = c.textContent.replace(/\d+ of \d+ drills passed/, passedCount() + ' of ' + all.length + ' drills passed'); });
+  draw();
+});
+</script>
+</body>
+</html>

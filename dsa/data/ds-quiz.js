@@ -1,0 +1,27 @@
+// "Pick the structure" quiz: a need, the best structure (slug) and three tempting wrong choices.
+window.DS_QUIZ = [
+  { q: 'Undo button: always take back the most recent action first.', a: 'stack', opts: ['queue-deque', 'heap', 'arraylist'], why: 'Most recent first is LIFO: push each action, pop to undo.' },
+  { q: 'Print a printer\'s jobs in the order they were sent.', a: 'queue-deque', opts: ['stack', 'heap', 'hashset'], why: 'Oldest first is FIFO: offer at the back, poll from the front.' },
+  { q: 'Count how many times each word appears in a book.', a: 'hashmap', opts: ['trie', 'bst-treemap', 'arraylist'], why: 'Word → count with O(1) updates: `map.merge(w, 1, Integer::sum)`.' },
+  { q: 'Have I seen this user id before? Millions of checks.', a: 'hashset', opts: ['arraylist', 'bst-treemap', 'hashmap'], why: 'Only membership is needed, no value per key: `HashSet.add` / `contains` in O(1).' },
+  { q: 'Keep the 10 highest scores from a stream of a million.', a: 'heap', opts: ['bst-treemap', 'arraylist', 'stack'], why: 'A min-heap of size 10: poll the smallest whenever it grows past 10. O(n log 10).' },
+  { q: 'Autocomplete: show every word that starts with what the user typed.', a: 'trie', opts: ['hashset', 'hashmap', 'string'], why: 'Walk the prefix in O(L), then list the words below that node.' },
+  { q: 'Find the closest booking time that is at or before 14:30.', a: 'bst-treemap', opts: ['hashmap', 'heap', 'array'], why: '`floorKey(14:30)` on a TreeMap: O(log n) and stays sorted as bookings change.' },
+  { q: 'A cache that evicts whatever was used least recently.', a: 'linkedhashmap', opts: ['hashmap', 'heap', 'queue-deque'], why: 'Access-order LinkedHashMap + `removeEldestEntry` is an LRU cache.' },
+  { q: 'Shortest number of moves in a maze (each move costs 1).', a: 'queue-deque', opts: ['stack', 'heap', 'union-find'], why: 'BFS with a queue reaches cells in order of distance.' },
+  { q: 'Are these two computers on the same network, as cables keep being added?', a: 'union-find', opts: ['graph', 'hashset', 'bst-treemap'], why: 'Groups only merge: `union` per cable, `find(a) == find(b)` per question, nearly O(1).' },
+  { q: 'Course prerequisites: find an order to take all courses.', a: 'graph', opts: ['union-find', 'stack', 'bst-treemap'], why: 'A directed graph plus topological sort (Kahn\'s algorithm).' },
+  { q: 'Sum of scores between positions l and r, while scores keep changing.', a: 'fenwick', opts: ['array', 'hashmap', 'heap'], why: 'Prefix sums with point updates: both O(log n) with a Fenwick tree.' },
+  { q: 'Minimum value in a range, with updates in between queries.', a: 'segment-tree', opts: ['fenwick', 'heap', 'bst-treemap'], why: 'Fenwick trees only do prefix sums. A segment tree combines ranges with `min`.' },
+  { q: 'Read the 50,000th item of a list instantly, many times.', a: 'arraylist', opts: ['linked-list', 'queue-deque', 'hashset'], why: '`get(i)` on an array-backed list is O(1). A linked list would walk 50,000 nodes.' },
+  { q: 'A 9×9 Sudoku board.', a: 'array', opts: ['arraylist', 'hashmap', 'graph'], why: 'Fixed size, indexed by row and column: `int[9][9]`.' },
+  { q: 'Build a 100,000-character report piece by piece.', a: 'string', opts: ['arraylist', 'stack', 'linked-list'], why: '`StringBuilder.append` is O(1) amortized; `+=` on a String is O(n²).' },
+  { q: 'Check that every ( [ { has a matching closer in the right order.', a: 'stack', opts: ['queue-deque', 'hashmap', 'string'], why: 'The most recent opener must close first: push openers, pop on closers.' },
+  { q: 'Always process the task with the earliest deadline next.', a: 'heap', opts: ['queue-deque', 'stack', 'hashmap'], why: 'A PriorityQueue ordered by deadline hands out the earliest in O(log n).' },
+  { q: 'Median of a stream of numbers, after each new number.', a: 'heap', opts: ['bst-treemap', 'arraylist', 'array'], why: 'Two heaps: a max-heap for the lower half and a min-heap for the upper half.' },
+  { q: 'Remove duplicate emails but keep the first-seen order.', a: 'linkedhashmap', opts: ['hashset', 'bst-treemap', 'arraylist'], why: 'A `LinkedHashSet` (the set form of LinkedHashMap) dedupes and remembers insertion order.' },
+  { q: 'Repeatedly insert in the middle of a sequence while walking it with an iterator.', a: 'linked-list', opts: ['arraylist', 'array', 'queue-deque'], why: '`ListIterator.add` links a node in O(1); an array would shift everything after it.' },
+  { q: 'Number of islands in a grid of land and water.', a: 'graph', opts: ['heap', 'trie', 'linkedhashmap'], why: 'The grid is an implicit graph: DFS/BFS from each unvisited land cell (union-find also works).' },
+  { q: 'Sliding window maximum over an array.', a: 'queue-deque', opts: ['heap', 'stack', 'hashmap'], why: 'A monotonic deque keeps candidates; old ones leave the front, useless ones the back. O(n).' },
+  { q: 'Visit a family tree generation by generation.', a: 'binary-tree', opts: ['graph', 'heap', 'trie'], why: 'A tree with level-order (BFS) traversal: one queue size per level.' }
+];

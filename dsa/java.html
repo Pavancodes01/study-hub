@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Java Toolbox · DSA in Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/store.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="data/java-api.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">Java toolbox</p>
+  <h1>The Java you need for DSA</h1>
+  <p class="lede">Most "I know the idea but can't write it" moments are really "I don't remember the method name". Drill these until they come out of your fingers without thinking.</p>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Sections">
+    <p>On this page</p>
+    <ol id="toc">
+      <li><a href="#quiz">Method quiz</a></li>
+      <li class="grp">Reference</li>
+    </ol>
+  </nav>
+  <main>
+    <section class="sec" id="quiz">
+      <h2>Method quiz</h2>
+      <p class="intro">Three ways to practice. <b>Type it</b> is the one that builds recall: you read the task and write the exact Java. Items you miss come back more often. Results save in this browser.</p>
+      <div class="filters">
+        <div class="seg" role="group" aria-label="Quiz mode">
+          <button type="button" data-mode="type" aria-pressed="true">Type it</button>
+          <button type="button" data-mode="pick" aria-pressed="false">Pick the code</button>
+          <button type="button" data-mode="meaning" aria-pressed="false">What does it do?</button>
+        </div>
+        <label for="grp" class="note" style="margin:0">Topic</label>
+        <select id="grp"><option value="all">All topics</option></select>
+      </div>
+      <div class="quiz" id="quizBox"></div>
+    </section>
+    <div id="refs"></div>
+  </main>
+</div>
+<footer>Answers are checked ignoring spaces and a trailing semicolon. Variable names must match the ones in the task.</footer>
+<script>
+DSA.topbar('java');
+(function(){
+  var esc = DSA.esc, fmt = DSA.fmt;
+  var groups = window.JAVA_API;
+  var items = [];
+  groups.forEach(function(g){
+    g.items.forEach(function(it, i){
+      items.push({ id: g.id + ':' + i, group: g.id, groupName: g.group, task: it[0], code: it[1], meaning: it[2], alts: it[3] || [] });
+    });
+  });
+
+  // ---------- reference ----------
+  var refs = document.getElementById('refs'), toc = document.getElementById('toc');
+  groups.forEach(function(g){
+    var s = document.createElement('section');
+    s.className = 'sec';
+    s.id = 'ref-' + g.id;
+    s.innerHTML = '<h2>' + esc(g.group) + '</h2><p class="intro">' + fmt(g.intro) + '</p><div class="tbl"><table><thead><tr><th>Task</th><th>Code</th><th>Notes</th></tr></thead><tbody>' +
+      g.items.map(function(it){ return '<tr><td>' + esc(it[0]) + '</td><td><code>' + esc(it[1]) + '</code></td><td>' + fmt(it[2]) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    refs.appendChild(s);
+    var li = document.createElement('li');
+    li.innerHTML = '<a href="#ref-' + g.id + '">' + esc(g.group) + '</a>';
+    toc.appendChild(li);
+    var o = document.createElement('option');
+    o.value = g.id; o.textContent = g.group;
+    document.getElementById('grp').appendChild(o);
+  });
+  DSA.tocSpy();
+
+  // ---------- quiz ----------
+  var box = document.getElementById('quizBox');
+  var mode = 'type', group = 'all', cur = null, answered = false, session = {seen: 0, ok: 0}, recent = [];
+  function norm(s){ return String(s).replace(/\s+/g, '').replace(/;+$/, ''); }
+  function pool(){ return items.filter(function(it){ return group === 'all' || it.group === group; }); }
+  // Weak items first: low success rate and rarely seen get more weight.
+  function pick(){
+    var p = pool().filter(function(it){ return recent.indexOf(it.id) < 0; });
+    if (!p.length) p = pool();
+    var weights = p.map(function(it){ var q = Store.quiz(it.id); return 1 + 3 * (q.seen - q.ok) + (q.seen ? 0 : 2) - (q.last ? 1 : 0); });
+    var total = weights.reduce(function(a, b){ return a + b; }, 0), r = Math.random() * total;
+    for (var i = 0; i < p.length; i++){ r -= weights[i]; if (r <= 0) return p[i]; }
+    return p[p.length - 1];
+  }
+  function distractors(it, field){
+    var same = items.filter(function(x){ return x.id !== it.id && x.group === it.group; });
+    var other = items.filter(function(x){ return x.id !== it.id && x.group !== it.group; });
+    var out = [];
+    function take(list){ list = list.slice().sort(function(){ return Math.random() - .5; }); for (var i = 0; i < list.length && out.length < 3; i++) if (out.indexOf(list[i][field]) < 0 && list[i][field] !== it[field]) out.push(list[i][field]); }
+    take(same); take(other);
+    return out;
+  }
+  function meta(){
+    var q = Store.quiz(cur.id);
+    return '<div class="meta"><span>' + esc(cur.groupName) + '</span><span>this card: ' + q.ok + ' / ' + q.seen + ' right</span><span>session: ' + session.ok + ' / ' + session.seen + '</span></div>';
+  }
+  function record(ok){
+    if (answered) return;
+    answered = true;
+    Store.setQuiz(cur.id, ok);
+    session.seen++; if (ok) session.ok++;
+    recent.push(cur.id); if (recent.length > 6) recent.shift();
+  }
+  function reveal(ok){
+    var a = box.querySelector('.ans');
+    a.innerHTML = '<p class="res ' + (ok ? 'ok' : 'bad') + '" style="margin:0 0 8px;font-weight:700">' + (ok ? 'Correct.' : 'Answer:') + '</p>' +
+      DSA.codeBlock(cur.code) + '<p style="margin:0">' + fmt(cur.meaning) + '</p>' +
+      (cur.alts.length ? '<p class="note" style="margin-top:6px">Also accepted: ' + cur.alts.map(function(x){ return '<code>' + esc(x) + '</code>'; }).join(' ') + '</p>' : '');
+    DSA.wireCopy(a); DSA.highlight(a);
+    var nx = box.querySelector('[data-a=next]');
+    nx.hidden = false; nx.focus();
+    box.querySelector('.meta').outerHTML = meta();
+  }
+  function show(){
+    cur = pick(); answered = false;
+    var body;
+    if (mode === 'type'){
+      body = '<p class="q">' + esc(cur.task) + '</p><p class="ctx">Type the Java expression or statement.</p>' +
+        '<input type="text" id="qa" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Your answer" placeholder="e.g. s.charAt(i)">' +
+        '<div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary sm" type="button" data-a="check">Check</button>' +
+        '<button class="btn sm" type="button" data-a="idk">Show me</button><button class="btn sm" type="button" data-a="next" hidden>Next card →</button></div>';
+    } else {
+      var field = mode === 'pick' ? 'code' : 'task';
+      var opts = distractors(cur, field).concat([cur[field]]).sort(function(){ return Math.random() - .5; });
+      body = (mode === 'pick' ? '<p class="q">' + esc(cur.task) + '</p><p class="ctx">Pick the matching code.</p>'
+                              : '<p class="q"><code>' + esc(cur.code) + '</code></p><p class="ctx">What does this do?</p>') +
+        '<div class="choices">' + opts.map(function(o){ return '<button type="button" data-v="' + esc(o) + '"' + (mode === 'meaning' ? ' style="font-family:var(--sans)"' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' +
+        '<div class="row" style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" type="button" data-a="next" hidden>Next card →</button></div>';
+    }
+    box.innerHTML = '<div class="meta"></div>' + body + '<div class="ans" aria-live="polite"></div>';
+    box.querySelector('.meta').outerHTML = meta();
+    var inp = box.querySelector('#qa');
+    if (inp){
+      inp.focus();
+      var check = function(){
+        if (answered) { show(); return; }
+        if (!inp.value.trim()) return;
+        var ok = [cur.code].concat(cur.alts).some(function(a){ return norm(a) === norm(inp.value); });
+        record(ok); reveal(ok);
+      };
+      box.querySelector('[data-a=check]').addEventListener('click', check);
+      inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+      box.querySelector('[data-a=idk]').addEventListener('click', function(){ record(false); reveal(false); });
+    }
+    box.querySelectorAll('.choices button').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (answered) return;
+        var right = mode === 'pick' ? cur.code : cur.task;
+        var ok = b.dataset.v === right;
+        box.querySelectorAll('.choices button').forEach(function(x){ if (x.dataset.v === right) x.classList.add('ok'); });
+        if (!ok) b.classList.add('bad');
+        record(ok); reveal(ok);
+      });
+    });
+    box.querySelector('[data-a=next]').addEventListener('click', show);
+  }
+  document.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.seg button').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      mode = b.dataset.mode; show();
+    });
+  });
+  document.getElementById('grp').addEventListener('change', function(e){ group = e.target.value; recent = []; show(); });
+  show();
+})();
+</script>
+<script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+</body>
+</html>
