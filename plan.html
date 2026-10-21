@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Plan</title>
+<script>try{var t=localStorage.getItem("plan:theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<style>
+:root{
+  --paper:#EEEDF3; --sheet:#FCFCFE; --ink:#1C1A2E; --soft:#5C5A72; --rule:#D9D7E4; --rule2:#B8B5CA;
+  --acc:#4338CA; --acc-t:#E4E2FA; --ok:#1E7F5C; --ok-t:#DDF2E8; --warn:#B4500F; --warn-t:#FBEADB;
+  --dsa:#C0267A; --java:#4338CA; --sql:#0E7490; --hld:#B4500F; --lld:#1E7F5C; --prac:#6B6880;
+  --mono:ui-monospace, Menlo, Consolas, monospace;
+  --text:"Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14131F; --sheet:#1C1A2B; --ink:#E8E6F3; --soft:#A09DB8; --rule:#2C2A40; --rule2:#413E5A;
+    --acc:#8E87FF; --acc-t:#27245A; --ok:#5AD6A0; --ok-t:#173A2C; --warn:#F2A35B; --warn-t:#3E2A16;
+    --dsa:#F25DAA; --java:#8E87FF; --sql:#4CC3DD; --hld:#F2A35B; --lld:#5AD6A0; --prac:#A09DB8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14131F; --sheet:#1C1A2B; --ink:#E8E6F3; --soft:#A09DB8; --rule:#2C2A40; --rule2:#413E5A;
+  --acc:#8E87FF; --acc-t:#27245A; --ok:#5AD6A0; --ok-t:#173A2C; --warn:#F2A35B; --warn-t:#3E2A16;
+  --dsa:#F25DAA; --java:#8E87FF; --sql:#4CC3DD; --hld:#F2A35B; --lld:#5AD6A0; --prac:#A09DB8;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:120px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.5}
+a{color:var(--acc);text-underline-offset:3px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px;border-radius:4px}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule2)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;font-family:var(--mono);letter-spacing:-.02em}
+.bar{flex:1;min-width:140px;height:10px;background:var(--rule);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.pct{font-family:var(--mono);font-size:13px;color:var(--soft);white-space:nowrap}
+.btn{border:1px solid var(--rule2);background:var(--sheet);border-radius:8px;padding:6px 12px;font-size:14px;color:var(--ink);text-decoration:none}
+.btn:hover{border-color:var(--acc)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--sheet)}
+.btn.danger:hover{border-color:var(--warn);color:var(--warn)}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:16px;margin:16px 0}
+.panel h2{font-size:15px;margin:0 0 10px;font-family:var(--mono)}
+.setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+.setup label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--soft)}
+.setup input,.setup select{background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padding:7px 9px;font-size:15px;color:var(--ink)}
+.note{font-size:13px;color:var(--soft);margin:10px 0 0}
+.err{color:var(--warn);font-size:13px;margin:8px 0 0}
+.subjects{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.subj{border:1px solid var(--rule);border-radius:10px;padding:10px;background:var(--paper)}
+.subj b{display:block;font-size:14px}
+.subj small{color:var(--soft);font-size:12px}
+.subj .bar{height:6px;margin-top:6px}
+.subj .bar i{background:var(--c)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0 8px}
+.chip{border:1px solid var(--rule2);background:var(--sheet);border-radius:99px;padding:4px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--soft);margin-left:auto}
+.week{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;margin:12px 0;overflow:hidden}
+.week>h3{margin:0;padding:10px 14px;font-size:14px;font-family:var(--mono);background:var(--paper);border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.week>h3 span{color:var(--soft);font-weight:400}
+.row{display:grid;grid-template-columns:28px 92px 1fr;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule);align-items:start}
+.row:last-child{border-bottom:0}
+.row input[type=checkbox]{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);cursor:pointer}
+.when{font-family:var(--mono);font-size:12px;color:var(--soft);line-height:1.35}
+.when b{display:block;color:var(--ink);font-size:13px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em;padding:1px 7px;border-radius:5px;color:var(--sheet);background:var(--c);margin-right:6px;vertical-align:1px}
+.what{min-width:0}
+.what .t{font-weight:600}
+.what ul{margin:4px 0 0;padding-left:18px;font-size:14px}
+.what li{margin:1px 0}
+.what .p{font-size:13px;color:var(--soft);margin-top:3px;overflow-wrap:anywhere}
+.row.done .what{opacity:.55}
+.row.done .what .t{text-decoration:line-through}
+.row.today{background:var(--acc-t)}
+.row.late .when b{color:var(--warn)}
+.row.late .when::after{content:"overdue";display:block;color:var(--warn);font-size:11px}
+.empty{padding:24px;text-align:center;color:var(--soft)}
+footer{color:var(--soft);font-size:13px;padding:24px 0 40px}
+@media (max-width:560px){
+  .row{grid-template-columns:24px 1fr;}
+  .when{grid-column:2}
+  .what{grid-column:2}
+  .chk{margin-left:0}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="btn" href="index.html" title="All courses">← Home</a>
+  <h1>Study Plan</h1>
+  <div class="bar" aria-hidden="true"><i id="allBar"></i></div>
+  <span class="pct" id="allPct">0%</span>
+  <button class="btn pri" id="todayBtn">Jump to today</button>
+  <button class="btn" id="themeBtn" title="Toggle theme">Theme</button>
+</div></header>
+
+<main class="wrap">
+  <section class="panel">
+    <h2>1 · Your schedule</h2>
+    <div class="setup">
+      <label>Start date<input type="date" id="start"></label>
+      <label>Java day<select id="dJ"></select></label>
+      <label>SQL day<select id="dS"></select></label>
+      <label>HLD day<select id="dH"></select></label>
+      <label>LLD day<select id="dL"></select></label>
+    </div>
+    <p class="err" id="err" hidden></p>
+    <p class="note">1 hour a day, 7 days a week. Mon–Thu: one subject each. <b>Fri + Sat + Sun = DSA</b>, 3 problems a session. Changing dates keeps your ticks.</p>
+    <div class="tools" style="margin-bottom:0">
+      <button class="btn danger" id="resetSched">Reset schedule</button>
+      <button class="btn danger" id="resetProg">Reset progress</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2 · Progress</h2>
+    <div class="subjects" id="subjects"></div>
+  </section>
+
+  <div class="tools" id="filters">
+    <button class="chip" data-f="all" aria-pressed="true">All</button>
+    <button class="chip" data-f="dsa">DSA</button>
+    <button class="chip" data-f="java">Java</button>
+    <button class="chip" data-f="sql">SQL</button>
+    <button class="chip" data-f="hld">HLD</button>
+    <button class="chip" data-f="lld">LLD</button>
+    <label class="chk"><input type="checkbox" id="hideDone"> Hide done</label>
+  </div>
+  <div id="plan"></div>
+  <footer>Ticks and settings save in this browser only. Links open the lesson pages in each course folder next to this file.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+var D = {"java":[{"slug":"primitives","track":"basics","title":"Variables and primitive types"},{"slug":"operators","track":"basics","title":"Operators and casting"},{"slug":"control-flow","track":"basics","title":"Control flow: loops and switch"},{"slug":"pass-by-value","track":"basics","title":"Methods and pass-by-value"},{"slug":"arrays","track":"basics","title":"Arrays"},{"slug":"strings","track":"basics","title":"Strings, the String pool and == vs equals"},{"slug":"stringbuilder","track":"basics","title":"StringBuilder"},{"slug":"classes","track":"oop","title":"Classes, objects and constructors"},{"slug":"static","track":"oop","title":"static vs instance"},{"slug":"inheritance","track":"oop","title":"Inheritance and super"},{"slug":"polymorphism","track":"oop","title":"Polymorphism: overriding vs overloading"},{"slug":"interfaces","track":"oop","title":"Abstract classes and interfaces"},{"slug":"equals-hashcode","track":"oop","title":"equals, hashCode and toString"},{"slug":"access","track":"oop","title":"Access modifiers and encapsulation"},{"slug":"nested","track":"oop","title":"Nested, inner and anonymous classes"},{"slug":"enums","track":"oop","title":"Enums"},{"slug":"wrappers","track":"core","title":"Wrapper classes, autoboxing and the Integer cache"},{"slug":"exceptions","track":"core","title":"Exceptions and try-with-resources"},{"slug":"generics","track":"core","title":"Generics: bounds, wildcards and erasure"},{"slug":"collections","track":"core","title":"The Collections Framework"},{"slug":"lists","track":"core","title":"ArrayList vs LinkedList"},{"slug":"hashmap","track":"core","title":"HashMap internals"},{"slug":"sets-maps","track":"core","title":"HashSet, TreeMap and LinkedHashMap"},{"slug":"comparators","track":"core","title":"Comparable vs Comparator"},{"slug":"iterators","track":"core","title":"Iterators and fail-fast"},{"slug":"immutability","track":"core","title":"Immutability"},{"slug":"lambdas","track":"func","title":"Lambdas and functional interfaces"},{"slug":"method-refs","track":"func","title":"Method references"},{"slug":"streams","track":"func","title":"Streams: map, filter, reduce"},{"slug":"collectors","track":"func","title":"Collectors and groupingBy"},{"slug":"optional","track":"func","title":"Optional"},{"slug":"threads","track":"conc","title":"Threads and Runnable"},{"slug":"synchronized","track":"conc","title":"synchronized and the monitor"},{"slug":"volatile","track":"conc","title":"volatile and visibility"},{"slug":"executors","track":"conc","title":"ExecutorService and thread pools"},{"slug":"completablefuture","track":"conc","title":"CompletableFuture"},{"slug":"locks-atomics","track":"conc","title":"Locks and atomics"},{"slug":"concurrent-collections","track":"conc","title":"Concurrent collections"},{"slug":"deadlock","track":"conc","title":"Deadlock"},{"slug":"memory-model","track":"jvm","title":"JVM memory: stack, heap and metaspace"},{"slug":"gc","track":"jvm","title":"Garbage collection"},{"slug":"classloading","track":"jvm","title":"Class loading and initialization"},{"slug":"records","track":"jvm","title":"Records"},{"slug":"sealed","track":"jvm","title":"Sealed classes and interfaces"},{"slug":"pattern-matching","track":"jvm","title":"Pattern matching for instanceof and switch"},{"slug":"var-textblocks","track":"jvm","title":"var and text blocks"},{"slug":"virtual-threads","track":"jvm","title":"Virtual threads (Java 21)"}],"sql":[{"slug":"select","track":"basics","title":"SELECT, columns and aliases"},{"slug":"where","track":"basics","title":"WHERE: AND, OR, IN, BETWEEN, LIKE"},{"slug":"null","track":"basics","title":"NULL and three-valued logic"},{"slug":"order-limit","track":"basics","title":"ORDER BY, LIMIT and OFFSET"},{"slug":"distinct","track":"basics","title":"DISTINCT"},{"slug":"expressions","track":"basics","title":"CASE, string and date functions"},{"slug":"inner-join","track":"joins","title":"INNER JOIN"},{"slug":"left-join","track":"joins","title":"LEFT JOIN and the anti-join"},{"slug":"full-cross","track":"joins","title":"FULL OUTER JOIN and CROSS JOIN"},{"slug":"self-join","track":"joins","title":"Self join"},{"slug":"join-cardinality","track":"joins","title":"Join cardinality and row explosion"},{"slug":"set-ops","track":"joins","title":"UNION, INTERSECT and EXCEPT"},{"slug":"aggregates","track":"agg","title":"Aggregate functions"},{"slug":"group-by","track":"agg","title":"GROUP BY"},{"slug":"having","track":"agg","title":"HAVING vs WHERE"},{"slug":"conditional-agg","track":"agg","title":"Conditional aggregation and pivots"},{"slug":"subqueries","track":"sub","title":"Subqueries: scalar, IN and derived tables"},{"slug":"exists","track":"sub","title":"Correlated subqueries, EXISTS and NOT EXISTS"},{"slug":"ctes","track":"sub","title":"CTEs: WITH"},{"slug":"recursive","track":"sub","title":"Recursive CTEs"},{"slug":"window-basics","track":"win","title":"Window functions: OVER and PARTITION BY"},{"slug":"ranking","track":"win","title":"ROW_NUMBER, RANK, DENSE_RANK and top-N per group"},{"slug":"running-totals","track":"win","title":"Running totals and frames"},{"slug":"lag-lead","track":"win","title":"LAG and LEAD"},{"slug":"ntile-percentiles","track":"win","title":"NTILE, FIRST_VALUE and percentiles"},{"slug":"ddl","track":"design","title":"Creating tables: keys and constraints"},{"slug":"dml","track":"design","title":"INSERT, UPDATE, DELETE and UPSERT"},{"slug":"normalization","track":"design","title":"Normalization (1NF to 3NF)"},{"slug":"relationships","track":"design","title":"Relationships: 1:1, 1:N and M:N"},{"slug":"indexes","track":"perf","title":"Indexes and B-trees"},{"slug":"explain","track":"perf","title":"Reading query plans and sargable queries"},{"slug":"transactions","track":"perf","title":"Transactions and ACID"},{"slug":"isolation","track":"perf","title":"Isolation levels and concurrency anomalies"},{"slug":"nth-highest","track":"classic","title":"Nth highest value"},{"slug":"duplicates","track":"classic","title":"Finding and removing duplicates"},{"slug":"gaps-islands","track":"classic","title":"Gaps and islands: streaks"},{"slug":"median","track":"classic","title":"Median without a median function"},{"slug":"retention","track":"classic","title":"Retention and cohorts"}],"hldc":[{"slug":"scaling","title":"Scaling basics"},{"slug":"load-balancing","title":"Load balancing"},{"slug":"caching","title":"Caching"},{"slug":"databases","title":"Databases: SQL or NoSQL"},{"slug":"replication","title":"Replication"},{"slug":"sharding","title":"Sharding (partitioning)"},{"slug":"consistent-hashing","title":"Consistent hashing"},{"slug":"cap","title":"CAP, PACELC and consistency"},{"slug":"indexes","title":"Indexes and storage engines"},{"slug":"queues","title":"Message queues and streams"},{"slug":"async-outbox","title":"Async work and the outbox pattern"},{"slug":"rate-limiting","title":"Rate limiting"},{"slug":"api-design","title":"API design"},{"slug":"unique-ids","title":"Unique ID generation"},{"slug":"search","title":"Search and the inverted index"},{"slug":"blob-storage","title":"Blob (object) storage"},{"slug":"observability","title":"Observability"},{"slug":"reliability","title":"Reliability patterns"},{"slug":"microservices","title":"Microservices or monolith"},{"slug":"two-phase-commit","title":"Distributed transactions and two-phase commit"},{"slug":"saga","title":"Saga: choreography vs orchestration"},{"slug":"cqrs","title":"CQRS: separate read and write models"},{"slug":"event-sourcing","title":"Event sourcing"},{"slug":"api-gateway","title":"API gateway and backends for frontends"},{"slug":"service-discovery","title":"Service discovery"},{"slug":"service-mesh","title":"Sidecar and service mesh"},{"slug":"strangler-fig","title":"Strangler fig and anti-corruption layer"}],"hldd":[{"slug":"url-shortener","title":"URL shortener"},{"slug":"rate-limiter","title":"Rate limiter"},{"slug":"key-value-store","title":"Distributed key-value store"},{"slug":"distributed-cache","title":"Distributed cache"},{"slug":"notifications","title":"Notification system"},{"slug":"news-feed","title":"News feed"},{"slug":"chat","title":"Chat (WhatsApp / Messenger)"},{"slug":"typeahead","title":"Typeahead / autocomplete"},{"slug":"web-crawler","title":"Web crawler"},{"slug":"video-streaming","title":"Video streaming (YouTube)"},{"slug":"ride-matching","title":"Ride matching (Uber)"},{"slug":"ticket-booking","title":"Ticket booking and payments"}],"lldb":[{"slug":"oop-pillars","title":"The four pillars of OOP"},{"slug":"srp","title":"Single Responsibility principle"},{"slug":"ocp","title":"Open/Closed principle"},{"slug":"lsp","title":"Liskov Substitution principle"},{"slug":"isp","title":"Interface Segregation principle"},{"slug":"dip","title":"Dependency Inversion principle"},{"slug":"composition","title":"Composition vs inheritance"},{"slug":"uml","title":"Reading UML class diagrams"},{"slug":"concurrency","title":"Concurrency basics for LLD"}],"lldp":[{"slug":"singleton","title":"Singleton"},{"slug":"factory-method","title":"Factory Method"},{"slug":"abstract-factory","title":"Abstract Factory"},{"slug":"builder","title":"Builder"},{"slug":"prototype","title":"Prototype"},{"slug":"adapter","title":"Adapter"},{"slug":"decorator","title":"Decorator"},{"slug":"facade","title":"Facade"},{"slug":"proxy","title":"Proxy"},{"slug":"composite","title":"Composite"},{"slug":"strategy","title":"Strategy"},{"slug":"observer","title":"Observer"},{"slug":"command","title":"Command"},{"slug":"state","title":"State"},{"slug":"template-method","title":"Template Method"},{"slug":"chain-of-responsibility","title":"Chain of Responsibility"}],"lldd":[{"slug":"parking-lot","title":"Parking lot"},{"slug":"elevator","title":"Elevator system"},{"slug":"vending-machine","title":"Vending machine"},{"slug":"movie-booking","title":"Movie ticket booking (BookMyShow)"},{"slug":"splitwise","title":"Expense sharing (Splitwise)"},{"slug":"chess","title":"Chess game"},{"slug":"lru-cache","title":"LRU cache"},{"slug":"logger","title":"Logging framework"},{"slug":"atm","title":"ATM"},{"slug":"library","title":"Library management"},{"slug":"snake-ladder","title":"Snake and ladder"},{"slug":"food-delivery","title":"Food delivery (Swiggy / Zomato)"}],"dsa":[{"slug":"two-pointers","title":"Two pointers","probs":["167 Two Sum II, 125 Valid Palindrome, 344 Reverse String, 11 Container With Most Water, 680 Valid Palindrome II","26 Remove Duplicates, 27 Remove Element, 283 Move Zeroes, 80 Remove Duplicates II","141 Linked List Cycle, 876 Middle of the Linked List, 19 Remove Nth Node From End, 142 Linked List Cycle II, 234 Palindrome Linked List","392 Is Subsequence, 21 Merge Two Sorted Lists, 349 / 350 Intersection of Arrays, 844 Backspace String Compare","15 3Sum, 16 3Sum Closest, 18 4Sum, 259 3Sum Smaller","75 Sort Colors, 905 Sort Array By Parity, 2161 Partition Array by Pivot","88 Merge Sorted Array, 977 Squares of a Sorted Array, 415 Add Strings, 67 Add Binary"]},{"slug":"sliding-window","title":"Sliding window","probs":["643 Maximum Average Subarray I, 1456 Max Vowels in a Substring, 2090 K Radius Averages, 438 Find All Anagrams","3 Longest Substring Without Repeating Characters, 1004 Max Consecutive Ones III, 904 Fruit Into Baskets, 424 Longest Repeating Character Replacement","209 Minimum Size Subarray Sum, 76 Minimum Window Substring, 1234 Replace the Substring for Balanced String","438 Find All Anagrams in a String, 567 Permutation in String, 424 Longest Repeating Character Replacement"]},{"slug":"prefix-sum","title":"Prefix sum","probs":["303 Range Sum Query, 1480 Running Sum of 1d Array, 724 Find Pivot Index, 1991 Find the Middle Index","560 Subarray Sum Equals K, 974 Subarray Sums Divisible by K, 525 Contiguous Array, 523 Continuous Subarray Sum","304 Range Sum Query 2D, 1314 Matrix Block Sum, 238 Product of Array Except Self (1D cousin)"]},{"slug":"hashing","title":"Hashing (HashMap and HashSet)","probs":["1 Two Sum, 217 Contains Duplicate, 219 Contains Duplicate II, 202 Happy Number","242 Valid Anagram, 387 First Unique Character, 383 Ransom Note, 169 Majority Element, 451 Sort Characters By Frequency","49 Group Anagrams, 249 Group Shifted Strings, 2273 Find Resultant Array After Removing Anagrams","128 Longest Consecutive Sequence, 349 Intersection of Two Arrays, 448 Find All Numbers Disappeared"]},{"slug":"binary-search","title":"Binary search","probs":["704 Binary Search, 374 Guess Number Higher or Lower, 74 Search a 2D Matrix, 69 Sqrt(x)","35 Search Insert Position, 278 First Bad Version, 34 Find First and Last Position, 744 Find Smallest Letter Greater Than Target","875 Koko Eating Bananas, 1011 Capacity To Ship Packages, 410 Split Array Largest Sum, 1482 Minimum Days to Make Bouquets","33 Search in Rotated Sorted Array, 153 Find Minimum in Rotated Sorted Array, 162 Find Peak Element"]},{"slug":"stack","title":"Stack and monotonic stack","probs":["20 Valid Parentheses, 1047 Remove All Adjacent Duplicates, 150 Evaluate Reverse Polish Notation, 155 Min Stack, 71 Simplify Path","739 Daily Temperatures, 496 Next Greater Element I, 503 Next Greater Element II, 901 Online Stock Span, 84 Largest Rectangle in Histogram","394 Decode String, 224 Basic Calculator, 227 Basic Calculator II, 71 Simplify Path","239 Sliding Window Maximum, 1438 Longest Subarray With Abs Diff ≤ Limit, 862 Shortest Subarray with Sum at Least K"]},{"slug":"linked-list","title":"Linked list","probs":["203 Remove Linked List Elements, 21 Merge Two Sorted Lists, 86 Partition List, 2 Add Two Numbers, 82 Remove Duplicates II","206 Reverse Linked List, 92 Reverse Linked List II, 25 Reverse Nodes in k-Group, 24 Swap Nodes in Pairs","234 Palindrome Linked List, 143 Reorder List, 142 Linked List Cycle II, 2095 Delete the Middle Node","160 Intersection of Two Linked Lists, 138 Copy List with Random Pointer, 148 Sort List, 23 Merge k Sorted Lists"]},{"slug":"heap","title":"Heap / priority queue (top K)","probs":["215 Kth Largest Element in an Array, 347 Top K Frequent Elements, 973 K Closest Points to Origin, 703 Kth Largest Element in a Stream","23 Merge k Sorted Lists, 378 Kth Smallest Element in a Sorted Matrix, 373 Find K Pairs with Smallest Sums, 632 Smallest Range Covering K Lists","295 Find Median from Data Stream, 480 Sliding Window Median, 502 IPO","253 Meeting Rooms II, 621 Task Scheduler, 1834 Single-Threaded CPU, 1642 Furthest Building You Can Reach"]},{"slug":"intervals","title":"Intervals","probs":["56 Merge Intervals, 57 Insert Interval, 228 Summary Ranges, 986 Interval List Intersections","435 Non-overlapping Intervals, 452 Minimum Number of Arrows to Burst Balloons, 646 Maximum Length of Pair Chain","253 Meeting Rooms II, 1094 Car Pooling, 1109 Corporate Flight Bookings, 252 Meeting Rooms"]},{"slug":"trees","title":"Binary trees (DFS and BFS)","probs":["104 Maximum Depth, 100 Same Tree, 226 Invert Binary Tree, 101 Symmetric Tree, 110 Balanced Binary Tree, 543 Diameter","112 Path Sum, 257 Binary Tree Paths, 1448 Count Good Nodes, 129 Sum Root to Leaf Numbers, 113 Path Sum II","102 Binary Tree Level Order Traversal, 199 Right Side View, 111 Minimum Depth, 103 Zigzag Level Order, 637 Average of Levels","98 Validate BST, 230 Kth Smallest in a BST, 235 LCA of a BST, 236 LCA of a Binary Tree, 700 Search in a BST, 108 Sorted Array to BST"]},{"slug":"graphs","title":"Graphs (BFS, DFS, topological sort)","probs":["200 Number of Islands, 695 Max Area of Island, 733 Flood Fill, 994 Rotting Oranges, 1091 Shortest Path in Binary Matrix, 130 Surrounded Regions","547 Number of Provinces, 1971 Find if Path Exists, 133 Clone Graph, 785 Is Graph Bipartite, 841 Keys and Rooms, 323 Connected Components","207 Course Schedule, 210 Course Schedule II, 269 Alien Dictionary, 1136 Parallel Courses, 802 Find Eventual Safe States","743 Network Delay Time, 1631 Path With Minimum Effort, 787 Cheapest Flights, 684 Redundant Connection, 1584 Min Cost to Connect All Points"]},{"slug":"backtracking","title":"Backtracking","probs":["78 Subsets, 77 Combinations, 39 Combination Sum, 17 Letter Combinations of a Phone Number, 216 Combination Sum III","46 Permutations, 47 Permutations II, 784 Letter Case Permutation, 22 Generate Parentheses","90 Subsets II, 40 Combination Sum II, 47 Permutations II","79 Word Search, 51 N-Queens, 131 Palindrome Partitioning, 37 Sudoku Solver, 93 Restore IP Addresses"]},{"slug":"dp","title":"Dynamic programming","probs":["70 Climbing Stairs, 198 House Robber, 322 Coin Change, 139 Word Break, 300 Longest Increasing Subsequence, 91 Decode Ways","62 Unique Paths, 64 Minimum Path Sum, 63 Unique Paths II, 221 Maximal Square, 120 Triangle","1143 Longest Common Subsequence, 72 Edit Distance, 583 Delete Operation for Two Strings, 516 Longest Palindromic Subsequence, 115 Distinct Subsequences","416 Partition Equal Subset Sum, 494 Target Sum, 518 Coin Change II, 1049 Last Stone Weight II, 474 Ones and Zeroes"]},{"slug":"greedy","title":"Greedy","probs":["55 Jump Game, 53 Maximum Subarray, 121 Best Time to Buy and Sell Stock, 122 Best Time II, 134 Gas Station, 45 Jump Game II","455 Assign Cookies, 881 Boats to Save People, 1029 Two City Scheduling, 179 Largest Number, 1710 Maximum Units on a Truck","763 Partition Labels, 621 Task Scheduler, 846 Hand of Straights, 678 Valid Parenthesis String, 1899 Merge Triplets"]}]};
+var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var SUBJ = {
+  dsa:{name:'DSA Patterns', dir:'dsa'},
+  java:{name:'Java Deep Dive', dir:'java'},
+  sql:{name:'SQL Deep Dive', dir:'sql'},
+  hld:{name:'HLD System Design', dir:'hld'},
+  lld:{name:'LLD Object Design', dir:'lld'}
+};
+var DEF = { start:'', dJ:1, dS:2, dH:3, dL:4 };
+var KEYS = ['dJ','dS','dH','dL'], LANE = { dJ:'J', dS:'S', dH:'H', dL:'L' };
+
+/* storage */
+function get(k, d){ try{ var v = localStorage.getItem('plan:' + k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }
+function set(k, v){ try{ localStorage.setItem('plan:' + k, JSON.stringify(v)); }catch(e){} }
+function del(k){ try{ localStorage.removeItem('plan:' + k); }catch(e){} }
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function href(subj, page, q, slug){ return encodeURI(SUBJ[subj].dir) + '/' + page + (q ? '?' + q + '=' + encodeURIComponent(slug) : ''); }
+
+/* split list into groups of about n, kept inside one track */
+function chunk(list, n, key){
+  var out = [], tracks = [];
+  list.forEach(function(x){ var k = key ? x[key] : ''; if (!tracks.length || tracks[tracks.length-1].k !== k) tracks.push({k:k, items:[]}); tracks[tracks.length-1].items.push(x); });
+  tracks.forEach(function(t){
+    var g = Math.ceil(t.items.length / n), size = Math.ceil(t.items.length / g);
+    for (var i = 0; i < t.items.length; i += size) out.push(t.items.slice(i, i + size));
+  });
+  return out;
+}
+function lessonSession(subj, id, group, page, q, label){
+  return { id:id, subj:subj, title:label || (group.length === 1 ? group[0].title : group.length + ' lessons'),
+    items: group.length > 1 ? group.map(function(x){ return { t:x.title, h:href(subj, page, q, x.slug) }; }) : null,
+    link: group.length === 1 ? href(subj, page, q, group[0].slug) : null };
+}
+
+/* lanes of sessions */
+function buildLanes(){
+  var J = chunk(D.java, 3, 'track').map(function(g, i){ return lessonSession('java', 'java' + i, g, 'lesson.html', 'l'); });
+  var S = chunk(D.sql, 3, 'track').map(function(g, i){ return lessonSession('sql', 'sql' + i, g, 'lesson.html', 'l'); });
+
+  var H = D.hldc.map(function(x){ return lessonSession('hld', 'hldc-' + x.slug, [x], 'concept.html', 'c', 'Concept: ' + x.title); })
+    .concat(D.hldd.map(function(x){ return lessonSession('hld', 'hldd-' + x.slug, [x], 'design.html', 'd', 'Design: ' + x.title); }));
+
+  var L = chunk(D.lldb, 3).map(function(g, i){ return lessonSession('lld', 'lldb' + i, g, 'basics.html', 'b', 'Basics: ' + g.map(function(x){ return x.title; }).join(', ')); })
+    .concat(chunk(D.lldp, 2).map(function(g, i){ return lessonSession('lld', 'lldp' + i, g, 'pattern.html', 'p', 'Patterns: ' + g.map(function(x){ return x.title; }).join(' + ')); }))
+    .concat(D.lldd.map(function(x){ return lessonSession('lld', 'lldd-' + x.slug, [x], 'design.html', 'd', 'Design: ' + x.title); }));
+  L.forEach(function(s){ if (s.items && s.title.indexOf(':') > 0) s.items.forEach(function(it){ it.short = true; }); });
+
+  var W = [];
+  D.dsa.forEach(function(p){
+    var probs = p.probs.join(', ').split(', '), h = href('dsa', 'pattern.html', 'p', p.slug);
+    var g = Math.ceil(probs.length / 3), size = Math.ceil(probs.length / g);
+    W.push({ id:'dsa-' + p.slug + '-learn', subj:'dsa', title:p.title + ' · learn', link:h, note:'Read the pattern, watch it work, do the drills.' });
+    for (var i = 0, k = 1; i < probs.length; i += size, k++)
+      W.push({ id:'dsa-' + p.slug + '-p' + k, subj:'dsa', title:p.title + ' · problems ' + k + '/' + g, link:h,
+        items:probs.slice(i, i + size).map(function(x){ return { t:x, h:'https://leetcode.com/problemset/?search=' + encodeURIComponent(x.replace(/^[\d\s\/]+/, '')) }; }) });
+  });
+  return { J:J, S:S, H:H, L:L, W:W };
+}
+
+/* filler once a lane is finished */
+var fillN = {};
+function filler(lane){
+  var n = fillN[lane] = (fillN[lane] || 0) + 1;
+  if (lane === 'W'){
+    var p = D.dsa[(n - 1) % D.dsa.length];
+    return { id:'fill-W' + n, subj:'dsa', practice:true, title:'Revise: ' + p.title, link:href('dsa', 'pattern.html', 'p', p.slug), note:'Re-solve 3 problems from this pattern without looking.' };
+  }
+  var subj = { J:'java', S:'sql', H:'hld', L:'lld' }[lane];
+  return { id:'fill-' + lane + n, subj:subj, practice:true, title:'Practice: ' + SUBJ[subj].name, link:href(subj, 'practice.html'), note:'Mixed practice drills from the whole course.' };
+}
+
+function ymd(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function parse(s){ var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function fmt(d){ return d.getDate() + ' ' + MON[d.getMonth()]; }
+
+/* place sessions on dates */
+function schedule(cfg){
+  var L = buildLanes(), pos = {}, laneOf = { 5:'W', 6:'W', 0:'W' };
+  KEYS.forEach(function(k){ laneOf[cfg[k]] = LANE[k]; });
+  Object.keys(L).forEach(function(k){ pos[k] = 0; });
+  fillN = {};
+  var start = parse(cfg.start), d = new Date(start);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Monday of start week
+  var weeks = [], left = function(){ return Object.keys(L).some(function(k){ return pos[k] < L[k].length; }); };
+  while (left() && weeks.length < 80){
+    var wk = { n:weeks.length + 1, from:new Date(d), rows:[] };
+    for (var i = 0; i < 7; i++){
+      var lane = laneOf[d.getDay()];
+      if (lane && d >= start && left()){
+        var s = pos[lane] < L[lane].length ? L[lane][pos[lane]++] : filler(lane);
+        wk.rows.push({ s:s, date:new Date(d) });
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    wk.to = new Date(d.getTime() - 864e5);
+    if (wk.rows.length) weeks.push(wk);
+  }
+  weeks.forEach(function(w, i){ w.n = i + 1; });
+  return { weeks:weeks, lanes:L };
+}
+
+/* UI */
+var $ = function(id){ return document.getElementById(id); };
+var cfg, filter = 'all', done = get('done', {});
+function loadCfg(){
+  cfg = get('cfg2', null) || {};
+  for (var k in DEF) if (cfg[k] === undefined) cfg[k] = DEF[k];
+  if (!cfg.start) cfg.start = ymd(new Date());
+}
+function fillSetup(){
+  KEYS.forEach(function(k){
+    var sel = $(k);
+    sel.innerHTML = [1,2,3,4].map(function(n){ return '<option value="' + n + '">' + ['','Monday','Tuesday','Wednesday','Thursday'][n] + '</option>'; }).join('');
+    sel.value = cfg[k];
+  });
+  $('start').value = cfg.start;
+}
+function onSetup(){
+  var next = { start:$('start').value };
+  KEYS.forEach(function(k){ next[k] = +$(k).value; });
+  var e = $('err');
+  if (!next.start){ e.textContent = 'Pick a start date.'; e.hidden = false; return; }
+  if (new Set(KEYS.map(function(k){ return next[k]; })).size < 4){ e.textContent = 'Give each subject a different day.'; e.hidden = false; return; }
+  e.hidden = true; cfg = next; set('cfg2', cfg); render();
+}
+
+var plan;
+function render(){
+  plan = schedule(cfg);
+  var today = ymd(new Date()), html = [], firstToday = null;
+  plan.weeks.forEach(function(w){
+    var rows = w.rows.filter(function(r){
+      if (filter !== 'all' && r.s.subj !== filter) return false;
+      if ($('hideDone').checked && done[r.s.id]) return false;
+      return true;
+    });
+    if (!rows.length) return;
+    var wDone = w.rows.filter(function(r){ return done[r.s.id]; }).length;
+    html.push('<section class="week" id="w' + w.n + '"><h3>Week ' + w.n + ' <span>' + fmt(w.from) + ' – ' + fmt(w.to) + ' · ' + wDone + '/' + w.rows.length + ' done</span></h3>');
+    rows.forEach(function(r){
+      var s = r.s, key = ymd(r.date), isDone = !!done[s.id];
+      var cls = 'row' + (isDone ? ' done' : '') + (key === today ? ' today' : '') + (!isDone && key < today ? ' late' : '');
+      if (key === today && !firstToday) firstToday = 'r-' + s.id;
+      var body = '<span class="tag" style="--c:var(--' + (s.practice ? 'prac' : s.subj) + ')">' + s.subj.toUpperCase() + '</span>';
+      body += s.link ? '<a class="t" href="' + s.link + '">' + esc(s.title) + '</a>' : '<span class="t">' + esc(s.title) + '</span>';
+      if (s.items){
+        if (s.items[0].short) body = '<span class="tag" style="--c:var(--' + s.subj + ')">' + s.subj.toUpperCase() + '</span><span class="t">' + esc(s.title.split(':')[0]) + '</span>';
+        body += '<ul>' + s.items.map(function(it){ return '<li><a href="' + it.h + '">' + esc(it.t) + '</a></li>'; }).join('') + '</ul>';
+      }
+      if (s.note) body += '<div class="p">' + esc(s.note) + '</div>';
+      html.push('<div class="' + cls + '" id="r-' + s.id + '"><input type="checkbox" data-id="' + s.id + '"' + (isDone ? ' checked' : '') + ' aria-label="Done: ' + esc(s.title) + '">' +
+        '<div class="when"><b>' + DAYS[r.date.getDay()] + ' ' + fmt(r.date) + '</b>1 hr</div><div class="what">' + body + '</div></div>');
+    });
+    html.push('</section>');
+  });
+  $('plan').innerHTML = html.join('') || '<div class="empty">Nothing to show with this filter.</div>';
+  $('todayBtn').dataset.target = firstToday || '';
+  stats();
+}
+
+function stats(){
+  var counts = {}, all = 0, allDone = 0, ends = {};
+  plan.weeks.forEach(function(w){ w.rows.forEach(function(r){
+    var s = r.s; if (s.practice) return;
+    var c = counts[s.subj] = counts[s.subj] || { n:0, d:0 };
+    c.n++; all++; if (done[s.id]){ c.d++; allDone++; }
+    ends[s.subj] = r.date;
+  }); });
+  var pct = all ? Math.round(allDone * 100 / all) : 0;
+  $('allBar').style.width = pct + '%'; $('allPct').textContent = allDone + '/' + all + ' · ' + pct + '%';
+  var last = plan.weeks[plan.weeks.length - 1];
+  $('subjects').innerHTML = Object.keys(SUBJ).map(function(k){
+    var c = counts[k] || { n:0, d:0 }, p = c.n ? Math.round(c.d * 100 / c.n) : 0;
+    return '<div class="subj" style="--c:var(--' + k + ')"><b>' + SUBJ[k].name + '</b><small>' + c.d + '/' + c.n + ' sessions · ends ' + (ends[k] ? fmt(ends[k]) : '-') + '</small><div class="bar"><i style="width:' + p + '%"></i></div></div>';
+  }).join('') + '<div class="subj" style="--c:var(--acc)"><b>Whole plan</b><small>' + plan.weeks.length + ' weeks · ends ' + (last ? fmt(last.to) + ' ' + last.to.getFullYear() : '-') + '</small><div class="bar"><i style="width:' + pct + '%"></i></div></div>';
+}
+
+/* events */
+$('plan').addEventListener('change', function(e){
+  var id = e.target.dataset && e.target.dataset.id; if (!id) return;
+  if (e.target.checked) done[id] = 1; else delete done[id];
+  set('done', done);
+  var row = e.target.closest('.row'); row.classList.toggle('done', e.target.checked);
+  if (e.target.checked) row.classList.remove('late');
+  if ($('hideDone').checked) render(); else stats();
+});
+['start'].concat(KEYS).forEach(function(k){ $(k).addEventListener('change', onSetup); });
+$('filters').addEventListener('click', function(e){
+  var b = e.target.closest('.chip'); if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll('.chip').forEach(function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+  render();
+});
+$('hideDone').addEventListener('change', render);
+$('todayBtn').addEventListener('click', function(){
+  var t = this.dataset.target, el = t && document.getElementById(t);
+  if (!el){
+    var today = ymd(new Date()), w = plan.weeks.filter(function(w){ return ymd(w.to) >= today; })[0];
+    el = w && document.getElementById('w' + w.n);
+  }
+  if (el) el.scrollIntoView(); else alert('No session found for today.');
+});
+$('resetSched').addEventListener('click', function(){
+  if (!confirm('Reset start date and weekdays to defaults? Your ticks stay.')) return;
+  del('cfg2'); loadCfg(); fillSetup(); $('err').hidden = true; render();
+});
+$('resetProg').addEventListener('click', function(){
+  if (!confirm('Clear every tick? This cannot be undone.')) return;
+  done = {}; del('done'); render();
+});
+$('themeBtn').addEventListener('click', function(){
+  var r = document.documentElement, cur = r.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  r.setAttribute('data-theme', next); try{ localStorage.setItem('plan:theme', next); }catch(e){}
+});
+
+loadCfg(); fillSetup(); render();
+})();
+</script>
+</body>
+</html>
