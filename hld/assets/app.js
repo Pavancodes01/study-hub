@@ -19,19 +19,21 @@
   HLD.byOrder = function(list){ return list.slice().sort(function(a, b){ return a.order - b.order; }); };
   HLD.find = function(list, slug){ return list.filter(function(x){ return x.slug === slug; })[0]; };
 
-  // Script tags load one by one, so the site works when opened straight from disk.
+  // Plain script tags, so the site works when opened straight from disk.
+  // They download in parallel; async = false makes them run in study order.
   HLD.boot = function(done){
     var files = HLD.CONCEPTS.map(function(f){ return 'data/concepts/' + f + '.js'; })
       .concat(HLD.DESIGNS.map(function(f){ return 'data/designs/' + f + '.js'; }));
-    var i = 0;
-    (function next(){
-      if (i >= files.length){ done(); return; }
+    var left = files.length, v = location.protocol.indexOf('http') === 0 ? '?v=' + HLD.VERSION : '';
+    if (!left){ done(); return; }
+    files.forEach(function(f){
       var s = document.createElement('script');
-      s.src = files[i++] + (location.protocol.indexOf('http') === 0 ? '?v=' + HLD.VERSION : '');
-      s.onload = next;
-      s.onerror = function(){ console.error('Missing content file: ' + s.src); next(); };
+      s.src = f + v;
+      s.async = false;
+      s.onload = function(){ if (--left === 0) done(); };
+      s.onerror = function(){ console.error('Missing content file: ' + s.src); if (--left === 0) done(); };
       document.head.appendChild(s);
-    })();
+    });
   };
 
   HLD.param = function(name){
@@ -92,7 +94,7 @@
   // ---------- top bar ----------
   HLD.bar = function(active){
     var links = [['home', 'index.html', 'Board'], ['approach', 'approach.html', 'How to approach'], ['estimate', 'estimate.html', 'Estimation'], ['practice', 'practice.html', 'Drills']];
-    links = links.filter(function(l){ return HLD.READY.indexOf(l[0]) >= 0; });
+    links = [['hub', '../index.html', '\u2190 Home']].concat(links.filter(function(l){ return HLD.READY.indexOf(l[0]) >= 0; }));
     var h = document.createElement('header');
     h.className = 'bar';
     h.innerHTML = '<div class="in"><a class="logo" href="index.html">system <span>design</span></a><nav class="nav" aria-label="Main">' +

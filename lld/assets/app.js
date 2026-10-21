@@ -17,20 +17,22 @@
   LLD.byOrder = function(list){ return list.slice().sort(function(a, b){ return a.order - b.order; }); };
   LLD.find = function(list, slug){ return list.filter(function(x){ return x.slug === slug; })[0]; };
 
-  // Load content with plain script tags, one after another, so the site works from disk.
+  // Load content with plain script tags, so the site works from disk.
   LLD.boot = function(done, only){
     var sets = [['basics', LLD.BASICS], ['patterns', LLD.PATTERNS], ['designs', LLD.DESIGNS]];
     var files = [];
     sets.forEach(function(s){ if (!only || only.indexOf(s[0]) >= 0) s[1].forEach(function(f){ files.push('data/' + s[0] + '/' + f + '.js'); }); });
-    var i = 0, http = location.protocol.indexOf('http') === 0;
-    (function next(){
-      if (i >= files.length){ done(); return; }
+    // Fetch every file at once; async = false still runs them in this order.
+    var left = files.length, http = location.protocol.indexOf('http') === 0;
+    if (!left){ done(); return; }
+    files.forEach(function(f){
       var s = document.createElement('script');
-      s.src = files[i++] + (http ? '?v=' + LLD.VERSION : '');
-      s.onload = next;
-      s.onerror = function(){ console.error('Missing content file: ' + s.src); next(); };
+      s.src = f + (http ? '?v=' + LLD.VERSION : '');
+      s.async = false;
+      s.onload = function(){ if (--left === 0) done(); };
+      s.onerror = function(){ console.error('Missing content file: ' + s.src); if (--left === 0) done(); };
       document.head.appendChild(s);
-    })();
+    });
   };
 
   LLD.param = function(n){ var m = new RegExp('[?&]' + n + '=([^&#]*)').exec(location.search); return m ? decodeURIComponent(m[1]) : null; };
@@ -110,6 +112,7 @@
   LLD.bar = function(active){
     var links = [['home', 'index.html', 'Overview'], ['approach', 'approach.html', 'Approach'], ['practice', 'practice.html', 'Drills']]
       .filter(function(l){ return LLD.READY.indexOf(l[0]) >= 0; });
+    links.unshift(['hub', '../index.html', '\u2190 Home']);
     var h = document.createElement('header');
     h.className = 'top';
     h.innerHTML = '<div class="in"><a class="mark" href="index.html" aria-label="Object design home">' +

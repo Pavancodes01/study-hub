@@ -227,6 +227,9 @@ footer{max-width:1280px;margin:0 auto;padding:16px 24px 40px;color:var(--soft);f
 @media (max-width:600px){
   body{font-size:16px}
   .top .in,.page{padding-left:16px;padding-right:16px}
+  html{scroll-padding-top:110px}
+  .top .in{flex-wrap:wrap;row-gap:6px;justify-content:space-between}
+  .links{order:3;flex-basis:100%;margin:0 -11px}
   .title{padding-top:24px}
   .mem{grid-template-columns:minmax(0,1fr);gap:14px;padding:10px 40px 10px 10px}
   .bar{grid-template-columns:minmax(0,1fr)}

@@ -41,15 +41,17 @@
     return e;
   };
 
+  // Fetch all files at once; async = false keeps them running in list order.
   S.load = function (paths, done) {
-    var bust = location.protocol === 'file:' ? '' : '?v=' + S.version, i = 0;
-    (function next() {
-      if (i >= paths.length) { done(); return; }
+    var bust = location.protocol === 'file:' ? '' : '?v=' + S.version, left = paths.length;
+    if (!left) { done(); return; }
+    paths.forEach(function (p) {
       var s = document.createElement('script');
-      s.src = paths[i++] + bust;
-      s.onload = next; s.onerror = next;
+      s.src = p + bust;
+      s.async = false;
+      s.onload = s.onerror = function () { if (--left === 0) done(); };
       document.head.appendChild(s);
-    })();
+    });
   };
   S.loadLessons = function (slugs, done) { S.load(slugs.map(function (s) { return 'data/lessons/' + s + '.js'; }), done); };
   S.ordered = function () { return S.manifest.map(function (s) { return S.lessons[s]; }).filter(Boolean); };
@@ -82,7 +84,7 @@
     });
   };
   S.nav = function (cur) {
-    var items = [['index.html', 'Course', 'course'], ['practice.html', 'Practice', 'practice'], ['playground.html', 'Playground', 'play']];
+    var items = [['../index.html', '&larr; Home', 'hub'], ['index.html', 'Course', 'course'], ['practice.html', 'Practice', 'practice'], ['playground.html', 'Playground', 'play']];
     var h = '<div class="in"><a class="brand" href="index.html">SQL <i>deep dive</i></a><nav class="links" aria-label="Main">';
     items.forEach(function (x) { h += '<a href="' + x[0] + '"' + (cur === x[2] ? ' aria-current="page"' : '') + '>' + x[1] + '</a>'; });
     h += '</nav><button class="mode" type="button">Dark mode</button></div>';

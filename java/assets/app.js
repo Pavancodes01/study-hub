@@ -43,18 +43,18 @@
     return e;
   };
 
-  /* Load scripts one after another (works from file://). */
+  /* Load scripts in parallel but run them in order (async = false); works from file://. */
   J.load = function (paths, done) {
     var bust = location.protocol === 'file:' ? '' : '?v=' + J.version;
-    var i = 0;
-    (function next() {
-      if (i >= paths.length) { done(); return; }
+    var left = paths.length;
+    if (!left) { done(); return; }
+    paths.forEach(function (p) {
       var s = document.createElement('script');
-      s.src = paths[i++] + bust;
-      s.onload = next;
-      s.onerror = next;
+      s.src = p + bust;
+      s.async = false;
+      s.onload = s.onerror = function () { if (--left === 0) done(); };
       document.head.appendChild(s);
-    })();
+    });
   };
   J.loadLessons = function (slugs, done) {
     J.load(slugs.map(function (s) { return 'data/lessons/' + s + '.js'; }), done);
@@ -152,7 +152,7 @@
 
   /* Top bar. */
   J.nav = function (cur) {
-    var items = [['index.html', 'Course', 'course'], ['practice.html', 'Practice', 'practice']];
+    var items = [['../index.html', '&larr; Home', 'hub'], ['index.html', 'Course', 'course'], ['practice.html', 'Practice', 'practice']];
     var h = '<div class="in"><a class="brand" href="index.html">java<i>.</i>deep(dive)</a><nav class="links" aria-label="Main">';
     items.forEach(function (x) {
       h += '<a href="' + x[0] + '"' + (cur === x[2] ? ' aria-current="page"' : '') + '>' + x[1] + '</a>';

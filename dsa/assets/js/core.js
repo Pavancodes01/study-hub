@@ -33,18 +33,20 @@
   DSA.sorted = function(){ return DSA.patterns.slice().sort(function(a, b){ return a.order - b.order; }); };
   DSA.get = function(slug){ return DSA.patterns.filter(function(p){ return p.slug === slug; })[0]; };
 
-  // Load data files one by one with script tags (works from file:// with no server).
+  // Load data files with script tags (works from file:// with no server).
+  // async = false: the browser fetches them all at once but runs them in list order.
   DSA.boot = function(base, extra, done){
     var list = DSA.FILES.map(function(f){ return base + 'data/patterns/' + f + '.js'; }).concat(extra || []);
-    var i = 0;
-    (function next(){
-      if (i >= list.length) { done(); return; }
+    var left = list.length;
+    if (!left) { done(); return; }
+    list.forEach(function(src){
       var s = document.createElement('script');
-      s.src = list[i++];
-      s.onload = next;
-      s.onerror = function(){ console.error('Could not load ' + s.src); next(); };
+      s.src = src;
+      s.async = false;
+      s.onload = function(){ if (--left === 0) done(); };
+      s.onerror = function(){ console.error('Could not load ' + src); if (--left === 0) done(); };
       document.head.appendChild(s);
-    })();
+    });
   };
 
   DSA.param = function(name){
@@ -138,7 +140,7 @@
   // ---------- top bar ----------
   DSA.topbar = function(active, base){
     base = base || '';
-    var links = [['home', 'index.html', 'Patterns'], ['ds', 'structures.html', 'Structures'], ['practice', 'practice.html', 'Drills'], ['java', 'java.html', 'Java<span class="wide-only"> toolbox</span>']];
+    var links = [['hub', '../index.html', '&larr; Home'], ['home', 'index.html', 'Patterns'], ['ds', 'structures.html', 'Structures'], ['practice', 'practice.html', 'Drills'], ['java', 'java.html', 'Java<span class="wide-only"> toolbox</span>']];
     var h = document.createElement('header');
     h.className = 'topbar';
     h.innerHTML = '<div class="in"><a class="brand" href="' + base + 'index.html">DSA <i>in</i> Java<span> · patterns</span></a>' +
